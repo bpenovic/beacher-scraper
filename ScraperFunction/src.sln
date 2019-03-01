@@ -5,11 +5,7 @@ VisualStudioVersion = 15.0.28307.421
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ScraperFunction", "ScraperFunction.csproj", "{412056D2-06CF-4936-9D42-5D32497E79CB}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ScraperLib", "..\ScraperLib\ScraperLib.csproj", "{B14A956F-C8A0-4238-BD96-21FEA43AFB9B}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{4D74CEFC-8795-46A7-B000-C5B8A15336F5}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "lib", "lib", "{FE99657F-4136-4A69-8F29-E3341721B078}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ScraperLib", "..\ScraperLib\ScraperLib.csproj", "{B14A956F-C8A0-4238-BD96-21FEA43AFB9B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -28,10 +24,6 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
-	EndGlobalSection
-	GlobalSection(NestedProjects) = preSolution
-		{412056D2-06CF-4936-9D42-5D32497E79CB} = {4D74CEFC-8795-46A7-B000-C5B8A15336F5}
-		{B14A956F-C8A0-4238-BD96-21FEA43AFB9B} = {FE99657F-4136-4A69-8F29-E3341721B078}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {D8954F70-7470-4B73-9018-C7143267524A}
