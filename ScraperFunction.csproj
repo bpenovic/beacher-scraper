@@ -4,9 +4,10 @@
     <AzureFunctionsVersion>v2</AzureFunctionsVersion>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="HtmlAgilityPack" Version="1.9.0" />
     <PackageReference Include="Microsoft.NET.Sdk.Functions" Version="1.0.24" />
-    <PackageReference Include="System.Text.Encoding.CodePages" Version="4.5.1" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\ScraperLib\ScraperLib.csproj" />
   </ItemGroup>
   <ItemGroup>
     <None Update="host.json">
