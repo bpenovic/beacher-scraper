@@ -1,8 +1,8 @@
 using System;
 
-namespace Scraper.Models
+namespace ScraperLib.Models
 {
-    public class QualityModel
+    public class Quality
     {
         public int Value { get; set; }
         public DateTime Date { get; set; }

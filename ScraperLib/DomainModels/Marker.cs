@@ -1,11 +1,11 @@
 using System;
 using System.Xml.Serialization;
 
-namespace Scraper.Models
+namespace ScraperLib.DomainModels
 {
     [Serializable()]
     [XmlRoot(ElementName = "marker")]
-    public class MarkerModel
+    public class Marker
     {
         [XmlAttribute("lsta")]
         public int Id { get; set; }

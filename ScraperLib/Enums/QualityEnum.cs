@@ -1,4 +1,4 @@
-namespace Scraper.Enums
+namespace ScraperLib.Enums
 {
     public enum QualityEnum
     {

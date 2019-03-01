@@ -1,6 +1,6 @@
-namespace Scraper.Models
+namespace ScraperLib.DomainModels
 {
-    public class ProfileModel
+    public class Profile
     {
         public string Type { get; set; }
         public string SurfaceType { get; set; }

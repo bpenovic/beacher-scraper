@@ -1,5 +1,5 @@
 
-namespace Scraper.Function
+namespace ScraperLib
 {
     public class Statics
     {

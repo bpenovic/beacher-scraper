@@ -9,13 +9,13 @@ using System.Threading.Tasks;
 using System.Xml.Linq;
 using System.Xml.Serialization;
 using HtmlAgilityPack;
-using Scraper.Enums;
-using Scraper.Function;
-using Scraper.Models;
+using ScraperLib.DomainServices.Interfaces;
+using ScraperLib.Enums;
+using ScraperLib.DomainModels;
 
-namespace Scraper.Services
+namespace ScraperLib.DomainServices
 {
-    public class MarkerService
+    public class MarkerService : IMarkerService
     {
         private readonly HttpClient _client;
 
@@ -23,10 +23,10 @@ namespace Scraper.Services
         {
             _client = new HttpClient();
         }
-        public async Task<IEnumerable<MarkerModel>> GetMarkersAsync(string url)
+        public async Task<IEnumerable<Marker>> GetMarkersAsync(string url)
         {
             Console.WriteLine("\nFetching markers... \n");
-            var markerList = new List<MarkerModel>();
+            var markerList = new List<Marker>();
 
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
             var result = await _client.GetStringAsync(url);
@@ -41,8 +41,8 @@ namespace Scraper.Services
                     foreach (var xMarker in markers)
                     {
                         var reader = new StringReader(xMarker.ToString());
-                        XmlSerializer xmlSerializer = new XmlSerializer(typeof(MarkerModel));
-                        var marker = (MarkerModel)xmlSerializer.Deserialize(reader);
+                        XmlSerializer xmlSerializer = new XmlSerializer(typeof(Marker));
+                        var marker = (Marker)xmlSerializer.Deserialize(reader);
                         Console.WriteLine("{0} {1} {2} {3} {4}", marker.Id.ToString(), marker.Name, marker.City, marker.Longitude, marker.Longitude);
                         markerList.Add(marker);
                     }
@@ -56,9 +56,9 @@ namespace Scraper.Services
             return markerList;
         }
 
-        public async Task<List<QualityModel>> GetQualityAsync(string url, MarkerModel marker)
+        public async Task<List<Quality>> GetQualityAsync(string url, Marker marker)
         {
-            var data = new List<QualityModel>();
+            var data = new List<Quality>();
             if (marker != null)
             {
                 Console.WriteLine($"\nFetching quality for {marker.Id} {marker.Name}... \n");
@@ -80,7 +80,7 @@ namespace Scraper.Services
                                 DateTimeStyles.None, out var parsedDate))
                             {
                                 var mark = (int)GetQualityMark(table.Descendants("a").FirstOrDefault());
-                                var quality = new QualityModel
+                                var quality = new Quality
                                 {
                                     Date = parsedDate,
                                     Value = mark
@@ -98,9 +98,9 @@ namespace Scraper.Services
             return data;
         }
 
-        public async Task<ProfileModel> GetDetailsAsync(string url, MarkerModel marker)
+        public async Task<Profile> GetDetailsAsync(string url, Marker marker)
         {
-            var detail = new ProfileModel();
+            var detail = new Profile();
             if (marker != null)
             {
                 Console.WriteLine($"\nFetching details for {marker.Id} {marker.Name}... \n");
@@ -159,7 +159,7 @@ namespace Scraper.Services
             return QualityEnum.Unknown;
         }
 
-        private void AddAttribute(HtmlNode node, ProfileModel profile)
+        private void AddAttribute(HtmlNode node, Profile profile)
         {
             if (node != null && !string.IsNullOrEmpty(node.InnerHtml))
             {
