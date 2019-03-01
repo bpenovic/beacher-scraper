@@ -3,33 +3,33 @@
   "tasks": [
     {
       "label": "clean",
-      "command": "dotnet clean",
+      "command": "dotnet clean ScraperFunction.csproj",
       "type": "shell",
-      "problemMatcher": "$msCompile"
+      "problemMatcher": "$msCompile",
     },
     {
       "label": "build",
-      "command": "dotnet build",
+      "command": "dotnet build ScraperFunction.csproj",
       "type": "shell",
       "dependsOn": "clean",
       "group": {
         "kind": "build",
         "isDefault": true
       },
-      "problemMatcher": "$msCompile"
+      "problemMatcher": "$msCompile",
     },
     {
       "label": "clean release",
-      "command": "dotnet clean --configuration Release",
+      "command": "dotnet clean --configuration Release ScraperFunction.csproj",
       "type": "shell",
-      "problemMatcher": "$msCompile"
+      "problemMatcher": "$msCompile",
     },
     {
       "label": "publish",
-      "command": "dotnet publish --configuration Release",
+      "command": "dotnet publish --configuration Release ScraperFunction.csproj",
       "type": "shell",
       "dependsOn": "clean release",
-      "problemMatcher": "$msCompile"
+      "problemMatcher": "$msCompile",
     },
     {
       "type": "func",
@@ -39,7 +39,7 @@
       },
       "command": "host start",
       "isBackground": true,
-      "problemMatcher": "$func-watch"
+      "problemMatcher": "$func-watch",     
     }
   ]
 }
