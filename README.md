@@ -6,3 +6,11 @@ For testing purposes, functions are implemented as HttpTriggered functions but f
 
 ### Database  
 Microsoft SQL Database is used for database storage.  
+
+
+## ScraperLib
+All Database manipulation is implemented inside ScraperLib. Servicelib contains:
+  * DAL - Database access layer (DbContext)  
+  * Models - Database models  
+  * DomainServices - services which manipulate with database (using Entity Framework)  
+  * DomainModels - models for domain services  
