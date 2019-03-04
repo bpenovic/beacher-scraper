@@ -19,7 +19,7 @@ namespace ScrapeFunction.Modules
         {
             var config = new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory())
-                .AddJsonFile("local.settings.json")
+                .AddJsonFile("appsettings.json")
                 .Build();
 
             services.AddSingleton<HttpClient>();

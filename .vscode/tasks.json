@@ -3,31 +3,35 @@
   "tasks": [
     {
       "label": "clean",
-      "command": "dotnet clean ScraperFunction.csproj",
+      "command": "dotnet clean",
       "type": "shell",
+      "args": ["${workspaceRoot}\\ScraperFunction\\ScraperFunction.csproj"],
       "problemMatcher": "$msCompile",
     },
     {
       "label": "build",
-      "command": "dotnet build ScraperFunction.csproj",
+      "command": "dotnet build",
       "type": "shell",
       "dependsOn": "clean",
       "group": {
         "kind": "build",
         "isDefault": true
       },
+      "args": ["${workspaceRoot}\\ScraperFunction\\ScraperFunction.csproj"],
       "problemMatcher": "$msCompile",
     },
     {
       "label": "clean release",
-      "command": "dotnet clean --configuration Release ScraperFunction.csproj",
+      "command": "dotnet clean --configuration Release",
       "type": "shell",
+      "args": ["${workspaceRoot}\\ScraperFunction\\ScraperFunction.csproj"],
       "problemMatcher": "$msCompile",
     },
     {
       "label": "publish",
-      "command": "dotnet publish --configuration Release ScraperFunction.csproj",
+      "command": "dotnet publish --configuration Release",
       "type": "shell",
+      "args": ["${workspaceRoot}\\ScraperFunction\\ScraperFunction.csproj"],
       "dependsOn": "clean release",
       "problemMatcher": "$msCompile",
     },
@@ -35,7 +39,7 @@
       "type": "func",
       "dependsOn": "build",
       "options": {
-        "cwd": "${workspaceFolder}/bin/Debug/netcoreapp2.1"
+        "cwd": "${workspaceFolder}ScraperFunction/bin/Debug/netcoreapp2.1"
       },
       "command": "host start",
       "isBackground": true,
