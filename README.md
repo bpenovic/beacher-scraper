@@ -14,4 +14,4 @@ All Database manipulation is implemented inside ScraperLib. Servicelib contains:
   * Models - Database models 
   * DomainServices - services which manipulate with database (using Entity Framework)  
   * DomainModels - models for domain services
-  ** ParseModels - models in proces of scraping, for parsing Xml
+    * ParseModels - models in proces of scraping, for parsing Xml
