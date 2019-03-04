@@ -1,11 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 
 namespace ScraperLib.DAL
 {
-    public class ScraperDbContext: DbContext
+    public class ScraperDbContext : DbContext
     {
+        public ScraperDbContext(DbContextOptions<ScraperDbContext> options)
+            : base(options)
+        { }
     }
 }

@@ -9,11 +9,11 @@ using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using ScrapeFunction.Containers;
 using ScrapeFunction.Modules;
-using ScraperLib.DomainServices;
 using ScraperLib.DomainServices.Interfaces;
 
 namespace ScrapeFunction.Functions
 {
+
     public static class GetMarkers
     {
         public static IServiceProvider Container = new ContainerBuilder()
