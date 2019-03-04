@@ -10,7 +10,8 @@ Microsoft SQL Database is used for database storage.
 
 ## ScraperLib
 All Database manipulation is implemented inside ScraperLib. Servicelib contains:
-  * DAL - Database access layer (DbContext)  
-  * Models - Database models  
+  * DAL - Database access layer 
+  * Models - Database models 
   * DomainServices - services which manipulate with database (using Entity Framework)  
-  * DomainModels - models for domain services  
+  * DomainModels - models for domain services
+  ** ParseModels - models in proces of scraping, for parsing Xml
