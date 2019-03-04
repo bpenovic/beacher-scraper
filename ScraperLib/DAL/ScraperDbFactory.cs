@@ -1,23 +1,26 @@
-﻿using System.IO;
+﻿using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
-using Microsoft.Extensions.Configuration;
-
-//using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Options;
+using ScraperFunction;
 
 namespace ScraperLib.DAL
 {
     public class ScraperDbFactory : IDesignTimeDbContextFactory<ScraperDbContext>
     {
+        private readonly AppSettings _settings;
+        public ScraperDbFactory(IOptions<AppSettings> settings)
+        {
+            _settings = settings.Value;
+        }
         public ScraperDbContext CreateDbContext(string[] args)
         {
-            IConfigurationRoot configuration = new ConfigurationBuilder()
-                .SetBasePath(Directory.GetCurrentDirectory())
-                .AddJsonFile("appsettings.json")
-                .Build();
-
             var builder = new DbContextOptionsBuilder<ScraperDbContext>();
-            var connectionString = configuration.GetConnectionString("DefaultConnection");
+
+            var connectionString = Environment.GetEnvironmentVariable("DefaultConnection");
+            if (string.IsNullOrEmpty(connectionString))
+                connectionString = _settings.DefaultConnection;
+
             builder.UseSqlServer(connectionString, x => x.UseNetTopologySuite());
             return new ScraperDbContext(builder.Options);
         }

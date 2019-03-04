@@ -1,4 +1,4 @@
-# Web scraper 
+ Web scraper 
 Web scraper is created as Azure Function, which collect data from web site (scrape it), parse it to model and store in database.  
 
 ## Azure functions  

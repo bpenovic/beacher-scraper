@@ -10,7 +10,9 @@ using System.Xml.Linq;
 using System.Xml.Serialization;
 using HtmlAgilityPack;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using NetTopologySuite.Geometries;
+using ScraperFunction;
 using ScraperLib.DAL;
 using ScraperLib.DomainServices.Interfaces;
 using ScraperLib.Enums;
@@ -32,7 +34,6 @@ namespace ScraperLib.DomainServices
         {
             Console.WriteLine("\nFetching markers... \n");
             var markerList = new List<Marker>();
-
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
             var result = await _client.GetStringAsync(url);
 
