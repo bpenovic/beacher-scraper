@@ -5,8 +5,7 @@ Web scraper is created as Azure Function, which collect data from web site (scra
 For testing purposes, functions are implemented as HttpTriggered functions but for production will be used as Time triggered functions (every month).  
 
 ### Database  
-Microsoft SQL Database is used for database storage.  
-
+Microsoft SQL Database is used for database storage with ORM (objet-orijented mapping) principle (Entity Framework, Code - first).  
 
 ## ScraperLib
 All Database manipulation is implemented inside ScraperLib. Servicelib contains:
