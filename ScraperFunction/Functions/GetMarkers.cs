@@ -28,9 +28,7 @@ namespace ScrapeFunction.Functions
             log.LogInformation("C# HTTP trigger function processed a request.");
 
             var markerService = Container.GetRequiredService<IMarkerService>();
-            ////Get all markers
-            var markers = await markerService.GetMarkersAsync("http://baltazar.izor.hr/plazepub/kakvoca_prikaz_xml9?p_god=2018&p_filter=&p_ciklus=-2&p_zup_id=&p_jezik=eng&p_grad=&pobjs=");
-
+            var markers = await markerService.ScrapeMarkersAsync("http://baltazar.izor.hr/plazepub/kakvoca_prikaz_xml9?p_god=2018&p_filter=&p_ciklus=-2&p_zup_id=&p_jezik=eng&p_grad=&pobjs=");
 
             return new OkObjectResult($"Scraper function works! \n {JsonConvert.SerializeObject(markers)}");
         }

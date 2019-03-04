@@ -24,7 +24,7 @@ namespace ScrapeFunction.Modules
                 .Build();
 
             services.AddDbContext<ScraperDbContext>(options =>
-                options.UseSqlServer(configuration.GetConnectionString("DefaultConnection")));
+                options.UseSqlServer(configuration.GetConnectionString("DefaultConnection"), x => x.UseNetTopologySuite()));
 
             services.AddSingleton<HttpClient>();
             services.AddSingleton<IMarkerService, MarkerService>();

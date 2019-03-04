@@ -27,20 +27,25 @@ namespace ScrapeFunction.Functions
             ILogger log)
         {
             var quality = new List<Quality>();
-
-            if (Int32.TryParse(req.Query["markerId"], out int markerId))
+            var markerService = Container.GetRequiredService<IMarkerService>();
+            if (Int32.TryParse(req.Query["markerId"], out var markerId))
             {
-                var markerName = req.Query["markerName"];
-                var marker = new Marker()
+                if (Int32.TryParse(req.Query["markerDataId"], out var markerDataId))
                 {
-                    Id = markerId,
-                    Name = markerName
-                };
-
-                ////Get quality of marker
-                var markerService = Container.GetRequiredService<IMarkerService>();
-                quality = (await markerService.GetQualityAsync("http://baltazar.izor.hr/plazepub/kakvoca_ispitivanja9?p_god=2018&p_ciklus=-2&p_jezik=eng&p_prikaz=,&p_cprikaz=,ci,", marker));
-
+                    var markerName = req.Query["markerName"];
+                    var marker = new Marker()
+                    {
+                        Id = markerId,
+                        Name = markerName,
+                        DataId = markerDataId
+                    };
+                    quality = (await markerService.ScrapeQualityAsync("http://baltazar.izor.hr/plazepub/kakvoca_ispitivanja9?p_god=2018&p_ciklus=-2&p_jezik=eng&p_prikaz=,&p_cprikaz=,ci,",marker));
+                }
+            }
+            else
+            {
+                var markers = await markerService.GetMarkersAsync();
+                await markerService.ScrapeQualityAsync("http://baltazar.izor.hr/plazepub/kakvoca_ispitivanja9?p_god=2018&p_ciklus=-2&p_jezik=eng&p_prikaz=,&p_cprikaz=,ci,", markers);
             }
 
             return (ActionResult)new OkObjectResult($"{JsonConvert.SerializeObject(quality)}");

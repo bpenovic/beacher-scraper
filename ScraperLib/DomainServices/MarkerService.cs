@@ -9,21 +9,26 @@ using System.Threading.Tasks;
 using System.Xml.Linq;
 using System.Xml.Serialization;
 using HtmlAgilityPack;
+using Microsoft.EntityFrameworkCore;
+using NetTopologySuite.Geometries;
+using ScraperLib.DAL;
 using ScraperLib.DomainServices.Interfaces;
 using ScraperLib.Enums;
 using ScraperLib.DomainModels;
+using ScraperLib.DomainModels.ParseModels;
 
 namespace ScraperLib.DomainServices
 {
     public class MarkerService : IMarkerService
     {
         private readonly HttpClient _client;
-
-        public MarkerService()
+        private readonly ScraperDbContext _context;
+        public MarkerService(ScraperDbContext context)
         {
             _client = new HttpClient();
+            _context = context;
         }
-        public async Task<IEnumerable<Marker>> GetMarkersAsync(string url)
+        public async Task<IEnumerable<Marker>> ScrapeMarkersAsync(string url)
         {
             Console.WriteLine("\nFetching markers... \n");
             var markerList = new List<Marker>();
@@ -41,11 +46,20 @@ namespace ScraperLib.DomainServices
                     foreach (var xMarker in markers)
                     {
                         var reader = new StringReader(xMarker.ToString());
-                        XmlSerializer xmlSerializer = new XmlSerializer(typeof(Marker));
-                        var marker = (Marker)xmlSerializer.Deserialize(reader);
-                        Console.WriteLine("{0} {1} {2} {3} {4}", marker.Id.ToString(), marker.Name, marker.City, marker.Longitude, marker.Longitude);
-                        markerList.Add(marker);
+                        XmlSerializer xmlSerializer = new XmlSerializer(typeof(MarkerParseModel));
+                        var marker = (MarkerParseModel)xmlSerializer.Deserialize(reader);
+
+                        markerList.Add(new Marker
+                        {
+                            Name = marker.Name,
+                            City = marker.City,
+                            DataId = marker.Id,
+                            Latitude = marker.Latitude,
+                            Longitude = marker.Longitude
+                        });
                     }
+
+                    await SaveMarkersAsync(markerList);
                 }
                 else
                     Console.WriteLine("Marker doesn't exist");
@@ -56,14 +70,21 @@ namespace ScraperLib.DomainServices
             return markerList;
         }
 
-        public async Task<List<Quality>> GetQualityAsync(string url, Marker marker)
+        public async Task ScrapeQualityAsync(string url, IEnumerable<Marker> markers)
         {
-            var data = new List<Quality>();
+            if (markers != null)
+                foreach (var marker in markers)
+                    await ScrapeQualityAsync(url, marker);
+        }
+
+        public async Task<List<Quality>> ScrapeQualityAsync(string url, Marker marker)
+        {
+            var qualities = new List<Quality>();
             if (marker != null)
             {
                 Console.WriteLine($"\nFetching quality for {marker.Id} {marker.Name}... \n");
                 Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
-                var result = await _client.GetStringAsync($"{url}&p_lok_id={marker.Id}");
+                var result = await _client.GetStringAsync($"{url}&p_lok_id={marker.DataId}");
 
                 if (!string.IsNullOrEmpty(result))
                 {
@@ -85,9 +106,11 @@ namespace ScraperLib.DomainServices
                                     Date = parsedDate,
                                     Value = mark
                                 };
-                                data.Add(quality);
+                                qualities.Add(quality);
                             }
                         }
+
+                        await SaveMarkerQualitiesAsync(marker.Id, qualities);
                     }
                     else
                         Console.WriteLine("Td doesn't exist");
@@ -95,10 +118,10 @@ namespace ScraperLib.DomainServices
                 else
                     Console.WriteLine("Result is empty");
             }
-            return data;
+            return qualities;
         }
 
-        public async Task<Profile> GetDetailsAsync(string url, Marker marker)
+        public async Task<Profile> ScrapeDetailsAsync(string url, Marker marker)
         {
             var detail = new Profile();
             if (marker != null)
@@ -127,6 +150,55 @@ namespace ScraperLib.DomainServices
             }
 
             return detail;
+        }
+
+        public async Task<IEnumerable<Marker>> GetMarkersAsync()
+        {
+            return await _context.Markers.Select(x => new Marker
+            {
+                Id = x.Id,
+                Name = x.Name,
+                City = x.City,
+                Latitude = x.Location.X,
+                Longitude = x.Location.Y,
+                DataId = x.DataId
+            }).ToListAsync();
+        }
+        private async Task SaveMarkersAsync(IEnumerable<Marker> markers)
+        {
+            if (markers != null)
+            {
+                foreach (var marker in markers)
+                {
+                    _context.Markers.Add(new Models.Marker
+                    {
+                        City = marker.City,
+                        Name = marker.Name,
+                        Location = new Point(marker.Latitude, marker.Longitude) { SRID = Statics.Srid },
+                        DataId = marker.DataId
+                    });
+                }
+
+                await _context.SaveChangesAsync();
+            }
+        }
+
+        private async Task SaveMarkerQualitiesAsync(int markerId, IEnumerable<Quality> qualities)
+        {
+            if (markerId > 0 && qualities != null)
+            {
+                foreach (var quality in qualities)
+                {
+                    _context.Qualities.Add(new Models.Quality
+                    {
+                        Date = quality.Date,
+                        MarkerId = markerId,
+                        Value = quality.Value
+                    });
+                }
+
+                await _context.SaveChangesAsync();
+            }
         }
 
         private string GetQualityMeasurementDate(HtmlNode node)
@@ -158,7 +230,6 @@ namespace ScraperLib.DomainServices
 
             return QualityEnum.Unknown;
         }
-
         private void AddAttribute(HtmlNode node, Profile profile)
         {
             if (node != null && !string.IsNullOrEmpty(node.InnerHtml))

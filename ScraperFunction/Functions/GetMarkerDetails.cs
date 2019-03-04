@@ -28,21 +28,17 @@ namespace ScrapeFunction.Functions
             log.LogInformation("C# HTTP trigger function processed a request.");
 
             var markerDetails = new Profile();
+            var markerService = Container.GetRequiredService<IMarkerService>();
 
             if (Int32.TryParse(req.Query["markerId"], out int markerId))
             {
                 var markerName = req.Query["markerName"];
-                var marker = new Marker()
+                var marker = new Marker
                 {
                     Id = markerId,
                     Name = markerName
                 };
-
-                var markerService = Container.GetRequiredService<IMarkerService>();
-
-                //Get quality of marker
-                markerDetails = await markerService.GetDetailsAsync("http://baltazar.izor.hr/plazepub/profil_plaze?psez=2018&p_jezik=eng", marker);
-
+                markerDetails = await markerService.ScrapeDetailsAsync("http://baltazar.izor.hr/plazepub/profil_plaze?psez=2018&p_jezik=eng", marker);
             }
 
             return (ActionResult)new OkObjectResult($"{JsonConvert.SerializeObject(markerDetails)}");

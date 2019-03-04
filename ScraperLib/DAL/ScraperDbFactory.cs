@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Text;
+﻿using System.IO;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 using Microsoft.Extensions.Configuration;
@@ -21,7 +18,7 @@ namespace ScraperLib.DAL
 
             var builder = new DbContextOptionsBuilder<ScraperDbContext>();
             var connectionString = configuration.GetConnectionString("DefaultConnection");
-            builder.UseSqlServer(connectionString);
+            builder.UseSqlServer(connectionString, x => x.UseNetTopologySuite());
             return new ScraperDbContext(builder.Options);
         }
     }
