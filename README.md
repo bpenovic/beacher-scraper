@@ -8,7 +8,7 @@ For testing purposes, functions are implemented as HttpTriggered functions but f
 Microsoft SQL Database is used for database storage with ORM (objet-orijented mapping) principle (Entity Framework, Code - first).  
 
 ## ScraperFunction
-Main project which contains:
+ScraperFunction is main project which contains:
  * Containers - container builders
  * Functions - Azure functions
    * GetMarkers - get all markers and store it to DB  
@@ -18,7 +18,7 @@ Main project which contains:
  * json settings  
 
 ## ScraperLib
-All Database manipulation is implemented inside ScraperLib. Servicelib contains:
+All Database manipulation is implemented inside ScraperLib. ScraperLib contains:
   * DAL - Database access layer 
   * Models - Database models 
   * DomainServices - services which manipulate with database (using Entity Framework)  
