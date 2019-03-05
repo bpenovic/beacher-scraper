@@ -1,5 +1,4 @@
-﻿
-namespace ScraperLib
+﻿namespace ScraperLib
 {
     public class AppSettings
     {

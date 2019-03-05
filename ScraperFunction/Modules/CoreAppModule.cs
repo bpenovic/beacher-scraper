@@ -34,6 +34,7 @@ namespace ScrapeFunction.Modules
 
             services.AddSingleton<HttpClient>();
             services.AddSingleton<IMarkerService, MarkerService>();
+            services.AddSingleton<IQualityService, QualityService>();
             services.Configure<AppSettings>(configuration);
 
             services.AddHealthChecks().AddDbContextCheck<ScraperDbContext>();

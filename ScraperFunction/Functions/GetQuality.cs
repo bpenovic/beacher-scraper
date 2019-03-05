@@ -29,19 +29,21 @@ namespace ScrapeFunction.Functions
             log.LogInformation("GetQuality function processed a request.");
 
             var quality = new List<Quality>();
+            var qualityService = Container.GetRequiredService<IQualityService>();
             var markerService = Container.GetRequiredService<IMarkerService>();
+
             var endPoints = Container.GetRequiredService<IOptions<AppSettings>>().Value.DataEndpoints;
             var url = $"{endPoints.MarkerQuality}?{Parameters.Year}=2018&{Parameters.Cycle}=-2&{Parameters.Language}=eng&{Parameters.View}=,&{Parameters.CycleView}=,ci,";
 
             if (Int32.TryParse(req.Query["markerId"], out var markerId))
             {
-                var marker = await markerService.GetMarkerById(markerId);
-                quality = await markerService.ScrapeQualityAsync(url, marker);
+                var marker = await markerService.GetMarkerByIdAsync(markerId);
+                quality = await qualityService.ScrapeQualityAsync(url, marker);
             }
             else
             {
                 var markers = await markerService.GetMarkersAsync();
-                await markerService.ScrapeQualityAsync(url, markers);
+                await qualityService.ScrapeQualityAsync(url, markers);
             }
 
             return new OkObjectResult($"GetQuality function works! \n{JsonConvert.SerializeObject(quality)}");

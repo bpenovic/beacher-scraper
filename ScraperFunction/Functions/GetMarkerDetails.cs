@@ -29,13 +29,15 @@ namespace ScrapeFunction.Functions
 
             var markerDetails = new Profile();
             var markerService = Container.GetRequiredService<IMarkerService>();
+            var detailsService = Container.GetRequiredService<IDetailsService>();
+
             var endPoints = Container.GetRequiredService<IOptions<AppSettings>>().Value.DataEndpoints;
             var url = $"{endPoints.MarkerDetails}?{Parameters.Season}=2018&{Parameters.Language}=eng";
 
             if (Int32.TryParse(req.Query["markerId"], out int markerId))
             {
-                var marker = await markerService.GetMarkerById(markerId);
-                markerDetails = await markerService.ScrapeDetailsAsync(url, marker);
+                var marker = await markerService.GetMarkerByIdAsync(markerId);
+                markerDetails = await detailsService.ScrapeDetailsAsync(url, marker);
             }
 
             return new OkObjectResult($"{JsonConvert.SerializeObject(markerDetails)}");

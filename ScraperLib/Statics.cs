@@ -1,4 +1,3 @@
-
 namespace ScraperLib
 {
     public class Statics
