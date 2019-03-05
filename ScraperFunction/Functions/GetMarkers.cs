@@ -34,7 +34,7 @@ namespace ScrapeFunction.Functions
 
             var markers = await markerService.ScrapeMarkersAsync(url);
 
-            return new OkObjectResult($"GetMarkers function works! \n {JsonConvert.SerializeObject(markers)}");
+            return new OkObjectResult($"{JsonConvert.SerializeObject(markers)}");
         }
     }
 }

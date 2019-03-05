@@ -46,7 +46,7 @@ namespace ScrapeFunction.Functions
                 await qualityService.ScrapeQualityAsync(url, markers);
             }
 
-            return new OkObjectResult($"GetQuality function works! \n{JsonConvert.SerializeObject(quality)}");
+            return new OkObjectResult($"{JsonConvert.SerializeObject(quality)}");
         }
     }
 }
