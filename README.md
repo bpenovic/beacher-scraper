@@ -12,5 +12,6 @@ All Database manipulation is implemented inside ScraperLib. Servicelib contains:
   * DAL - Database access layer 
   * Models - Database models 
   * DomainServices - services which manipulate with database (using Entity Framework)  
+    * Interfaces - interfaces of domain services 
   * DomainModels - models for domain services
     * ParseModels - models in proces of scraping, for parsing Xml
