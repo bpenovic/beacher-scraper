@@ -10,9 +10,7 @@ using System.Xml.Linq;
 using System.Xml.Serialization;
 using HtmlAgilityPack;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
 using NetTopologySuite.Geometries;
-using ScraperFunction;
 using ScraperLib.DAL;
 using ScraperLib.DomainServices.Interfaces;
 using ScraperLib.Enums;
@@ -155,16 +153,14 @@ namespace ScraperLib.DomainServices
 
         public async Task<IEnumerable<Marker>> GetMarkersAsync()
         {
-            return await _context.Markers.Select(x => new Marker
-            {
-                Id = x.Id,
-                Name = x.Name,
-                City = x.City,
-                Latitude = x.Location.X,
-                Longitude = x.Location.Y,
-                DataId = x.DataId
-            }).ToListAsync();
+            return await _context.Markers.Select(Marker.Select).ToListAsync();
         }
+
+        public async Task<Marker> GetMarkerById(int id)
+        {
+            return await _context.Markers.Select(Marker.Select).FirstOrDefaultAsync(x => x.Id == id);
+        }
+
         private async Task SaveMarkersAsync(IEnumerable<Marker> markers)
         {
             if (markers != null)

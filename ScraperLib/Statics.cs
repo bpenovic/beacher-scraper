@@ -14,4 +14,15 @@ namespace ScraperLib
         public static readonly string Width = "Beach width";
         public static readonly int Srid = 4326;
     }
+
+    public class Parameters
+    {
+        public static readonly string Season = "psez";
+        public static readonly string Year = "p_god";
+        public static readonly string Language = "p_jezik";
+        public static readonly string Cycle = "p_ciklus";
+        public static readonly string View = "p_prikaz";
+        public static readonly string CycleView = "p_cprikaz";
+        public static readonly string Filter = "p_filter";
+    }
 }

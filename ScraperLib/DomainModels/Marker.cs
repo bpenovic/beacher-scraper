@@ -1,4 +1,5 @@
 using System;
+using System.Linq.Expressions;
 using System.Xml.Serialization;
 
 namespace ScraperLib.DomainModels
@@ -11,5 +12,15 @@ namespace ScraperLib.DomainModels
         public double Longitude { get; set; }
         public string Name { get; set; }
         public string City { get; set; }
+
+        public static Expression<Func<Models.Marker, Marker>> Select => x => new Marker()
+        {
+            Id = x.Id,
+            Name = x.Name,
+            City = x.City,
+            DataId = x.DataId,
+            Latitude = x.Location.X,
+            Longitude = x.Location.Y
+        };
     }
 }

@@ -6,9 +6,11 @@ using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using ScrapeFunction.Containers;
 using ScrapeFunction.Modules;
+using ScraperLib;
 using ScraperLib.DomainModels;
 using ScraperLib.DomainServices.Interfaces;
 
@@ -21,27 +23,22 @@ namespace ScrapeFunction.Functions
             .Build();
 
         [FunctionName("GetMarkerDetails")]
-        public static async Task<IActionResult> Run(
-            [HttpTrigger(AuthorizationLevel.Function, "get", "post", Route = null)] HttpRequest req,
-            ILogger log)
+        public static async Task<IActionResult> Run([HttpTrigger(AuthorizationLevel.Function, "get", "post", Route = null)] HttpRequest req, ILogger log)
         {
             log.LogInformation("C# HTTP trigger function processed a request.");
 
             var markerDetails = new Profile();
             var markerService = Container.GetRequiredService<IMarkerService>();
+            var endPoints = Container.GetRequiredService<IOptions<AppSettings>>().Value.DataEndpoints;
+            var url = $"{endPoints.MarkerDetails}?{Parameters.Season}=2018&{Parameters.Language}=eng";
 
             if (Int32.TryParse(req.Query["markerId"], out int markerId))
             {
-                var markerName = req.Query["markerName"];
-                var marker = new Marker
-                {
-                    Id = markerId,
-                    Name = markerName
-                };
-                markerDetails = await markerService.ScrapeDetailsAsync("http://baltazar.izor.hr/plazepub/profil_plaze?psez=2018&p_jezik=eng", marker);
+                var marker = await markerService.GetMarkerById(markerId);
+                markerDetails = await markerService.ScrapeDetailsAsync(url, marker);
             }
 
-            return (ActionResult)new OkObjectResult($"{JsonConvert.SerializeObject(markerDetails)}");
+            return new OkObjectResult($"{JsonConvert.SerializeObject(markerDetails)}");
         }
     }
 }

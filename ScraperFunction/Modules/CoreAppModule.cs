@@ -4,13 +4,14 @@ using System.Net.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using ScraperFunction;
+using ScraperLib;
 using ScraperLib.DAL;
 using ScraperLib.DomainServices;
 using ScraperLib.DomainServices.Interfaces;
 
 namespace ScrapeFunction.Modules
 {
+    /// <inheritdoc />
     /// <summary>
     /// This represents the module entity for dependencies.
     /// </summary>
@@ -33,8 +34,10 @@ namespace ScrapeFunction.Modules
 
             services.AddSingleton<HttpClient>();
             services.AddSingleton<IMarkerService, MarkerService>();
-            services.Configure<AppSettings>(configuration.GetSection("ConnectionStrings"));
+            services.Configure<AppSettings>(configuration);
+
             services.AddHealthChecks().AddDbContextCheck<ScraperDbContext>();
+
         }
     }
 }

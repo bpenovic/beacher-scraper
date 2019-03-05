@@ -2,7 +2,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 using Microsoft.Extensions.Options;
-using ScraperFunction;
 
 namespace ScraperLib.DAL
 {
@@ -19,7 +18,7 @@ namespace ScraperLib.DAL
 
             var connectionString = Environment.GetEnvironmentVariable("DefaultConnection");
             if (string.IsNullOrEmpty(connectionString))
-                connectionString = _settings.DefaultConnection;
+                connectionString = _settings.ConnectionStrings.DefaultConnection;
 
             builder.UseSqlServer(connectionString, x => x.UseNetTopologySuite());
             return new ScraperDbContext(builder.Options);

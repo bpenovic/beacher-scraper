@@ -8,8 +8,10 @@ using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using System.Collections.Generic;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 using ScrapeFunction.Containers;
 using ScrapeFunction.Modules;
+using ScraperLib;
 using ScraperLib.DomainModels;
 using ScraperLib.DomainServices.Interfaces;
 
@@ -22,33 +24,27 @@ namespace ScrapeFunction.Functions
             .Build();
 
         [FunctionName("GetQuality")]
-        public static async Task<IActionResult> Run(
-            [HttpTrigger(AuthorizationLevel.Function, "get", "post", Route = null)] HttpRequest req,
-            ILogger log)
+        public static async Task<IActionResult> Run([HttpTrigger(AuthorizationLevel.Function, "get", "post", Route = null)] HttpRequest req, ILogger log)
         {
+            log.LogInformation("GetQuality function processed a request.");
+
             var quality = new List<Quality>();
             var markerService = Container.GetRequiredService<IMarkerService>();
+            var endPoints = Container.GetRequiredService<IOptions<AppSettings>>().Value.DataEndpoints;
+            var url = $"{endPoints.MarkerQuality}?{Parameters.Year}=2018&{Parameters.Cycle}=-2&{Parameters.Language}=eng&{Parameters.View}=,&{Parameters.CycleView}=,ci,";
+
             if (Int32.TryParse(req.Query["markerId"], out var markerId))
             {
-                if (Int32.TryParse(req.Query["markerDataId"], out var markerDataId))
-                {
-                    var markerName = req.Query["markerName"];
-                    var marker = new Marker()
-                    {
-                        Id = markerId,
-                        Name = markerName,
-                        DataId = markerDataId
-                    };
-                    quality = (await markerService.ScrapeQualityAsync("http://baltazar.izor.hr/plazepub/kakvoca_ispitivanja9?p_god=2018&p_ciklus=-2&p_jezik=eng&p_prikaz=,&p_cprikaz=,ci,",marker));
-                }
+                var marker = await markerService.GetMarkerById(markerId);
+                quality = await markerService.ScrapeQualityAsync(url, marker);
             }
             else
             {
                 var markers = await markerService.GetMarkersAsync();
-                await markerService.ScrapeQualityAsync("http://baltazar.izor.hr/plazepub/kakvoca_ispitivanja9?p_god=2018&p_ciklus=-2&p_jezik=eng&p_prikaz=,&p_cprikaz=,ci,", markers);
+                await markerService.ScrapeQualityAsync(url, markers);
             }
 
-            return (ActionResult)new OkObjectResult($"{JsonConvert.SerializeObject(quality)}");
+            return new OkObjectResult($"GetQuality function works! \n{JsonConvert.SerializeObject(quality)}");
         }
     }
 }

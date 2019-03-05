@@ -11,5 +11,6 @@ namespace ScraperLib.DomainServices.Interfaces
         Task<IEnumerable<Marker>> ScrapeMarkersAsync(string url);
         Task<Profile> ScrapeDetailsAsync(string url, Marker marker);
         Task<IEnumerable<Marker>> GetMarkersAsync();
+        Task<Marker> GetMarkerById(int id);
     }
 }
