@@ -24,4 +24,11 @@ namespace ScraperLib
         public static readonly string CycleView = "p_cprikaz";
         public static readonly string Filter = "p_filter";
     }
+
+    public class Endpoints
+    {
+        public static readonly string Markers = "http://baltazar.izor.hr/plazepub/kakvoca_prikaz_xml9";
+        public static readonly string Details = "http://baltazar.izor.hr/plazepub/profil_plaze";
+        public static readonly string Quality = "http://baltazar.izor.hr/plazepub/kakvoca_ispitivanja9";
+    }
 }

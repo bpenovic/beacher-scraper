@@ -31,8 +31,7 @@ namespace ScrapeFunction.Functions
             var markerService = Container.GetRequiredService<IMarkerService>();
             var detailsService = Container.GetRequiredService<IDetailsService>();
 
-            var endPoints = Container.GetRequiredService<IOptions<AppSettings>>().Value.DataEndpoints;
-            var url = $"{endPoints.MarkerDetails}?{Parameters.Season}=2018&{Parameters.Language}=eng";
+            var url = $"{Endpoints.Details}?{Parameters.Season}=2018&{Parameters.Language}=eng";
 
             if (Int32.TryParse(req.Query["markerId"], out int markerId))
             {

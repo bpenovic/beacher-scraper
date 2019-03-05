@@ -23,11 +23,10 @@ namespace ScrapeFunction.Modules
             var configuration = new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory())
                 .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
+                .AddEnvironmentVariables()
                 .Build();
 
-            var connectionString = Environment.GetEnvironmentVariable("DefaultConnection");
-            if (string.IsNullOrEmpty(connectionString))
-                connectionString = configuration.GetConnectionString("DefaultConnection");
+            var connectionString = configuration.GetConnectionString("DefaultConnection");
 
             services.AddDbContext<ScraperDbContext>(options =>
                 options.UseSqlServer(connectionString, x => x.UseNetTopologySuite()));

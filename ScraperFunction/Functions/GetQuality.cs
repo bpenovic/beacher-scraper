@@ -8,7 +8,6 @@ using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using System.Collections.Generic;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Options;
 using ScrapeFunction.Containers;
 using ScrapeFunction.Modules;
 using ScraperLib;
@@ -32,8 +31,7 @@ namespace ScrapeFunction.Functions
             var qualityService = Container.GetRequiredService<IQualityService>();
             var markerService = Container.GetRequiredService<IMarkerService>();
 
-            var endPoints = Container.GetRequiredService<IOptions<AppSettings>>().Value.DataEndpoints;
-            var url = $"{endPoints.MarkerQuality}?{Parameters.Year}=2018&{Parameters.Cycle}=-2&{Parameters.Language}=eng&{Parameters.View}=,&{Parameters.CycleView}=,ci,";
+            var url = $"{Endpoints.Quality}?{Parameters.Year}=2018&{Parameters.Cycle}=-2&{Parameters.Language}=eng&{Parameters.View}=,&{Parameters.CycleView}=,ci,";
 
             if (Int32.TryParse(req.Query["markerId"], out var markerId))
             {

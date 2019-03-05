@@ -28,9 +28,7 @@ namespace ScrapeFunction.Functions
             log.LogInformation("GetMarkers function processed a request.");
 
             var markerService = Container.GetRequiredService<IMarkerService>();
-
-            var endPoints = Container.GetRequiredService<IOptions<AppSettings>>().Value.DataEndpoints;
-            var url =$"{endPoints.Markers}?{Parameters.Year}=2018&{Parameters.Filter}=&{Parameters.Cycle}=-2&{Parameters.Language}=eng";
+            var url =$"{Endpoints.Markers}?{Parameters.Year}=2018&{Parameters.Filter}=&{Parameters.Cycle}=-2&{Parameters.Language}=eng";
 
             var markers = await markerService.ScrapeMarkersAsync(url);
 
