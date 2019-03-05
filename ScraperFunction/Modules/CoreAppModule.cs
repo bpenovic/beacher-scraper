@@ -1,14 +1,17 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.Net.Http;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using ScraperLib;
+using ScraperLib.DAL;
 using ScraperLib.DomainServices;
 using ScraperLib.DomainServices.Interfaces;
 
-//using ScraperLib.DomainServices;
-
 namespace ScrapeFunction.Modules
 {
+    /// <inheritdoc />
     /// <summary>
     /// This represents the module entity for dependencies.
     /// </summary>
@@ -17,13 +20,24 @@ namespace ScrapeFunction.Modules
         /// <inheritdoc />
         public override void Load(IServiceCollection services)
         {
-            var config = new ConfigurationBuilder()
+            var configuration = new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory())
-                .AddJsonFile("appsettings.json")
+                .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
+                .AddEnvironmentVariables()
                 .Build();
+
+            var connectionString = configuration.GetConnectionString("DefaultConnection");
+
+            services.AddDbContext<ScraperDbContext>(options =>
+                options.UseSqlServer(connectionString, x => x.UseNetTopologySuite()));
 
             services.AddSingleton<HttpClient>();
             services.AddSingleton<IMarkerService, MarkerService>();
+            services.AddSingleton<IQualityService, QualityService>();
+            services.Configure<AppSettings>(configuration);
+
+            services.AddHealthChecks().AddDbContextCheck<ScraperDbContext>();
+
         }
     }
 }

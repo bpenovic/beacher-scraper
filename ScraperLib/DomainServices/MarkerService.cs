@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
@@ -8,26 +7,29 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 using System.Xml.Serialization;
-using HtmlAgilityPack;
+using Microsoft.EntityFrameworkCore;
+using NetTopologySuite.Geometries;
+using ScraperLib.DAL;
 using ScraperLib.DomainServices.Interfaces;
-using ScraperLib.Enums;
 using ScraperLib.DomainModels;
+using ScraperLib.DomainModels.ParseModels;
 
 namespace ScraperLib.DomainServices
 {
     public class MarkerService : IMarkerService
     {
         private readonly HttpClient _client;
-
-        public MarkerService()
+        private readonly ScraperDbContext _context;
+        public MarkerService(ScraperDbContext context)
         {
             _client = new HttpClient();
+            _context = context;
         }
-        public async Task<IEnumerable<Marker>> GetMarkersAsync(string url)
+
+        public async Task<IEnumerable<Marker>> ScrapeMarkersAsync(string url)
         {
             Console.WriteLine("\nFetching markers... \n");
             var markerList = new List<Marker>();
-
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
             var result = await _client.GetStringAsync(url);
 
@@ -41,11 +43,20 @@ namespace ScraperLib.DomainServices
                     foreach (var xMarker in markers)
                     {
                         var reader = new StringReader(xMarker.ToString());
-                        XmlSerializer xmlSerializer = new XmlSerializer(typeof(Marker));
-                        var marker = (Marker)xmlSerializer.Deserialize(reader);
-                        Console.WriteLine("{0} {1} {2} {3} {4}", marker.Id.ToString(), marker.Name, marker.City, marker.Longitude, marker.Longitude);
-                        markerList.Add(marker);
+                        XmlSerializer xmlSerializer = new XmlSerializer(typeof(MarkerParseModel));
+                        var marker = (MarkerParseModel)xmlSerializer.Deserialize(reader);
+
+                        markerList.Add(new Marker
+                        {
+                            Name = marker.Name,
+                            City = marker.City,
+                            DataId = marker.Id,
+                            Latitude = marker.Latitude,
+                            Longitude = marker.Longitude
+                        });
                     }
+
+                    await SaveMarkersAsync(markerList);
                 }
                 else
                     Console.WriteLine("Marker doesn't exist");
@@ -55,151 +66,51 @@ namespace ScraperLib.DomainServices
 
             return markerList;
         }
-
-        public async Task<List<Quality>> GetQualityAsync(string url, Marker marker)
+        public async Task<IEnumerable<Marker>> GetMarkersAsync()
         {
-            var data = new List<Quality>();
-            if (marker != null)
+            return await _context.Markers.Select(Marker.Select).ToListAsync();
+        }
+        public async Task<Marker> GetMarkerByIdAsync(int id)
+        {
+            return await _context.Markers.Select(Marker.Select).FirstOrDefaultAsync(x => x.Id == id);
+        }
+
+        private async Task SaveMarkersAsync(IEnumerable<Marker> markers)
+        {
+            if (markers != null)
             {
-                Console.WriteLine($"\nFetching quality for {marker.Id} {marker.Name}... \n");
-                Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
-                var result = await _client.GetStringAsync($"{url}&p_lok_id={marker.Id}");
-
-                if (!string.IsNullOrEmpty(result))
+                var markersDb = await _context.Markers.ToListAsync();
+                foreach (var marker in markers)
                 {
-                    var doc = new HtmlDocument();
-                    doc.LoadHtml(result);
-                    var tables = doc.DocumentNode.Descendants("table");
-
-                    if (tables != null)
+                    if (markersDb != null)
                     {
-                        foreach (var table in tables)
+                        var markerDb = markersDb.FirstOrDefault(x => x.DataId == marker.DataId);
+                        if (markerDb is null)
+                           InsertMarkerToContext(marker);
+                        else
                         {
-                            var date = GetQualityMeasurementDate(table.Descendants("td").LastOrDefault());
-                            if (DateTime.TryParseExact(date, "dd.MM.yyyy hh:mm", CultureInfo.CurrentCulture,
-                                DateTimeStyles.None, out var parsedDate))
-                            {
-                                var mark = (int)GetQualityMark(table.Descendants("a").FirstOrDefault());
-                                var quality = new Quality
-                                {
-                                    Date = parsedDate,
-                                    Value = mark
-                                };
-                                data.Add(quality);
-                            }
+                            markerDb.DataId = marker.DataId;
+                            markerDb.City = marker.City;
+                            markerDb.Location = new Point(marker.Latitude, marker.Longitude) { SRID = Statics.Srid };
+                            _context.Markers.Update(markerDb);
                         }
                     }
                     else
-                        Console.WriteLine("Td doesn't exist");
+                        InsertMarkerToContext(marker);
                 }
-                else
-                    Console.WriteLine("Result is empty");
+
+                await _context.SaveChangesAsync();
             }
-            return data;
         }
-
-        public async Task<Profile> GetDetailsAsync(string url, Marker marker)
+        private void InsertMarkerToContext(Marker marker)
         {
-            var detail = new Profile();
-            if (marker != null)
+            _context.Markers.Add(new Models.Marker
             {
-                Console.WriteLine($"\nFetching details for {marker.Id} {marker.Name}... \n");
-                Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
-                var result = await _client.GetStringAsync($"{url}&plok={marker.Id}");
-
-                if (!string.IsNullOrEmpty(result))
-                {
-                    var doc = new HtmlDocument();
-                    doc.LoadHtml(result);
-
-                    var tables = doc.DocumentNode.Descendants("table");
-                    var dataTable = tables?.ElementAt(1);
-
-                    if (dataTable != null)
-                    {
-                        var trs = dataTable.Descendants("tr");
-                        foreach (var tr in trs)
-                            AddAttribute(tr, detail);
-                    }
-                }
-                else
-                    Console.WriteLine("Result is empty");
-            }
-
-            return detail;
-        }
-
-        private string GetQualityMeasurementDate(HtmlNode node)
-        {
-            var date = "";
-            if (node != null)
-            {
-                var dateNode = node.FirstChild;
-                if (dateNode != null)
-                    date = dateNode.InnerHtml;
-            }
-
-            return date;
-        }
-        private QualityEnum GetQualityMark(HtmlNode node)
-        {
-            var mark = "";
-            if (node != null)
-            {
-                var nodes = node.ChildNodes;
-                foreach (var value in nodes)
-                    if (!value.InnerHtml.Contains('+') && value.Name == "#text")
-                        mark = value.InnerHtml.Replace(" ", string.Empty);
-            }
-
-            var enumKey = char.ToUpper(mark[0]) + mark.Substring(1);
-            if (Enum.IsDefined(typeof(QualityEnum), enumKey))
-                return (QualityEnum)Enum.Parse(typeof(QualityEnum), enumKey);
-
-            return QualityEnum.Unknown;
-        }
-
-        private void AddAttribute(HtmlNode node, Profile profile)
-        {
-            if (node != null && !string.IsNullOrEmpty(node.InnerHtml))
-            {
-                var childs = node.Descendants("td");
-                if (childs != null && childs.Any())
-                {
-                    var key = childs.First()?.InnerHtml;
-                    var value = childs.Last()?.InnerHtml;
-
-                    if (!string.IsNullOrEmpty(key) && !string.IsNullOrEmpty(value))
-                    {
-                        if (key.StartsWith(Statics.Type))
-                            profile.Type = value;
-
-                        if (key.StartsWith(Statics.AverageTemperature))
-                            profile.AverageTemperature = double.Parse(value);
-
-                        if (key.StartsWith(Statics.Length))
-                            profile.Length = double.Parse(value);
-
-                        if (key.StartsWith(Statics.Width))
-                            profile.Width = double.Parse(value);
-
-                        if (key.StartsWith(Statics.MaxSalinity))
-                            profile.MaxSalinity = double.Parse(value);
-
-                        if (key.StartsWith(Statics.MinSalinity))
-                            profile.MinSalinity = double.Parse(value);
-
-                        if (key.StartsWith(Statics.SurfaceType))
-                            profile.SurfaceType = value;
-
-                        if (key.StartsWith(Statics.Vegetation))
-                            profile.Vegetation = value;
-
-                        if (key.StartsWith(Statics.Wind))
-                            profile.Wind = value;
-                    }
-                }
-            }
+                City = marker.City,
+                Name = marker.Name,
+                Location = new Point(marker.Latitude, marker.Longitude) { SRID = Statics.Srid },
+                DataId = marker.DataId
+            });
         }
     }
 }

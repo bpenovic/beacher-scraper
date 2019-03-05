@@ -1,14 +1,20 @@
-using System;
-using System.Xml.Serialization;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using NetTopologySuite.Geometries;
 
 namespace ScraperLib.Models
 {
     public class Marker
     {
+        [Key]
         public int Id { get; set; }
-        public double Latitude { get; set; }
-        public double Longitude { get; set; }
+        [Required]
+        public Point Location { get; set; }
+        [Required]
         public string Name { get; set; }
         public string City { get; set; }
+        [Required]
+        public int DataId { get; set; }
+        public virtual ICollection<Quality> Qualities { get; set; }
     }
 }

@@ -1,23 +1,25 @@
 using System;
-using System.Xml.Serialization;
+using System.Linq.Expressions;
 
 namespace ScraperLib.DomainModels
 {
-    [Serializable()]
-    [XmlRoot(ElementName = "marker")]
     public class Marker
     {
-        [XmlAttribute("lsta")]
         public int Id { get; set; }
-        [XmlAttribute("lat")]
+        public int DataId { get; set; }
         public double Latitude { get; set; }
-
-        [XmlAttribute("lng")]
         public double Longitude { get; set; }
-
-        [XmlAttribute("lpla")]
         public string Name { get; set; }
-        [XmlAttribute("lgrad")]
         public string City { get; set; }
+
+        public static Expression<Func<Models.Marker, Marker>> Select => x => new Marker()
+        {
+            Id = x.Id,
+            Name = x.Name,
+            City = x.City,
+            DataId = x.DataId,
+            Latitude = x.Location.X,
+            Longitude = x.Location.Y
+        };
     }
 }

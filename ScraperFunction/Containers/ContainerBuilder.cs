@@ -1,7 +1,6 @@
 ﻿using System;
 using Microsoft.Extensions.DependencyInjection;
 using ScrapeFunction.Modules;
-using ScrapeFunction.Containers;
 
 namespace ScrapeFunction.Containers
 {

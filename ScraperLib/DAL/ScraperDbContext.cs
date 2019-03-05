@@ -1,11 +1,17 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
+using ScraperLib.Models;
 
 namespace ScraperLib.DAL
 {
-    public class ScraperDbContext: DbContext
+    public class ScraperDbContext : DbContext
     {
+        public ScraperDbContext(DbContextOptions<ScraperDbContext> options): base(options){ }
+
+        public DbSet<Marker> Markers { get; set; }
+        public DbSet<Quality> Qualities { get; set; }
+
+        protected override void OnModelCreating(ModelBuilder builder)
+        {
+        }
     }
 }
