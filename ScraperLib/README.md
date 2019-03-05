@@ -1,5 +1,5 @@
 # ScraperLib
-All Database manipulation is implemented inside ScraperLib. Servicelib contains:
+All data manipulation is implemented inside ScraperLib. Servicelib contains:
   * DAL - Database access layer 
   * Models - Database models 
   * DomainServices - services which manipulate with database (using Entity Framework)  
