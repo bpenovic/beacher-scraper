@@ -4,6 +4,8 @@ using System.Net.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Console;
 using ScraperLib;
 using ScraperLib.DAL;
 using ScraperLib.DomainServices;
@@ -29,15 +31,19 @@ namespace ScrapeFunction.Modules
             var connectionString = configuration.GetConnectionString("DefaultConnection");
 
             services.AddDbContext<ScraperDbContext>(options =>
-                options.UseSqlServer(connectionString, x => x.UseNetTopologySuite()));
-
+            {
+                options.UseSqlServer(connectionString, x =>
+                {
+                    x.EnableRetryOnFailure(5, TimeSpan.FromSeconds(30), errorNumbersToAdd: null);
+                    x.UseNetTopologySuite();
+                });
+            }, ServiceLifetime.Transient);
             services.AddSingleton<HttpClient>();
             services.AddSingleton<IMarkerService, MarkerService>();
             services.AddSingleton<IQualityService, QualityService>();
             services.Configure<AppSettings>(configuration);
 
             services.AddHealthChecks().AddDbContextCheck<ScraperDbContext>();
-
         }
     }
 }

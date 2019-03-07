@@ -4,16 +4,17 @@ using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 using HtmlAgilityPack;
+using Microsoft.Extensions.Options;
 using ScraperLib.DAL;
 using ScraperLib.DomainModels;
 
 namespace ScraperLib.DomainServices
 {
-    public class DetailsService
+    public class DetailsService : DomainBaseService
     {
         private readonly HttpClient _client;
         private readonly ScraperDbContext _context;
-        public DetailsService(ScraperDbContext context)
+        public DetailsService(ScraperDbContext context, IOptions<AppSettings> settings) : base(settings)
         {
             _client = new HttpClient();
             _context = context;

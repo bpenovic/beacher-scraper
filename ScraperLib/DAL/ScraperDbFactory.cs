@@ -1,6 +1,8 @@
 ﻿using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Console;
 using Microsoft.Extensions.Options;
 
 namespace ScraperLib.DAL
@@ -17,9 +19,16 @@ namespace ScraperLib.DAL
             var builder = new DbContextOptionsBuilder<ScraperDbContext>();
 
             var connectionString = _settings.ConnectionStrings.DefaultConnection;
-
             builder.UseSqlServer(connectionString, x => x.UseNetTopologySuite());
+
             return new ScraperDbContext(builder.Options);
+        }
+        public static DbContextOptionsBuilder<ScraperDbContext> GetOptionsBuilder(string connectionString)
+        {
+            var optionsBuilder = new DbContextOptionsBuilder<ScraperDbContext>();
+            optionsBuilder.UseSqlServer(connectionString, x => x.UseNetTopologySuite());
+            optionsBuilder.UseLoggerFactory(new LoggerFactory(new[] { new ConsoleLoggerProvider((_, __) => true, true) }));
+            return optionsBuilder;
         }
     }
 }

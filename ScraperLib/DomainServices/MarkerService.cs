@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using System.Xml.Linq;
 using System.Xml.Serialization;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using NetTopologySuite.Geometries;
 using ScraperLib.DAL;
 using ScraperLib.DomainServices.Interfaces;
@@ -16,17 +17,24 @@ using ScraperLib.DomainModels.ParseModels;
 
 namespace ScraperLib.DomainServices
 {
-    public class MarkerService : IMarkerService
+    public class MarkerService : DomainBaseService, IMarkerService
     {
         private readonly HttpClient _client;
         private readonly ScraperDbContext _context;
-        public MarkerService(ScraperDbContext context)
+        public MarkerService(ScraperDbContext context, IOptions<AppSettings> settings) : base(settings)
         {
             _client = new HttpClient();
             _context = context;
+            _context.Database.SetCommandTimeout(35);
         }
 
-        public async Task<IEnumerable<Marker>> ScrapeMarkersAsync(string url)
+        public async Task<IEnumerable<Marker>> ScrapeAndSaveMarkersAsync(string url)
+        {
+            var markers = await ScrapeMarkersAsync(url);
+            return markers;
+        }
+
+        private async Task<IEnumerable<Marker>> ScrapeMarkersAsync(string url)
         {
             Console.WriteLine("\nFetching markers... \n");
             var markerList = new List<Marker>();
@@ -68,49 +76,58 @@ namespace ScraperLib.DomainServices
         }
         public async Task<IEnumerable<Marker>> GetMarkersAsync()
         {
-            return await _context.Markers.Select(Marker.Select).ToListAsync();
+            using (var dbContext = GetDbContext(true))
+            {
+                return await dbContext.Markers.Select(Marker.Select).ToListAsync();
+            }
         }
         public async Task<Marker> GetMarkerByIdAsync(int id)
         {
-            return await _context.Markers.Select(Marker.Select).FirstOrDefaultAsync(x => x.Id == id);
+            using (var dbContext = GetDbContext(true))
+            {
+                return await dbContext.Markers.Select(Marker.Select).FirstOrDefaultAsync(x => x.Id == id);
+            }
         }
 
         private async Task SaveMarkersAsync(IEnumerable<Marker> markers)
         {
+            var markesToUpdate = new List<Models.Marker>();
             if (markers != null)
             {
-                var markersDb = await _context.Markers.ToListAsync();
-                foreach (var marker in markers)
+                using (var dbContext = GetDbContext(true))
                 {
-                    if (markersDb != null)
+                    var markersDb = await dbContext.Markers.ToListAsync();
+                    foreach (var marker in markers)
                     {
-                        var markerDb = markersDb.FirstOrDefault(x => x.DataId == marker.DataId);
-                        if (markerDb is null)
-                           InsertMarkerToContext(marker);
-                        else
+                        if (markersDb != null)
                         {
-                            markerDb.DataId = marker.DataId;
-                            markerDb.City = marker.City;
-                            markerDb.Location = new Point(marker.Latitude, marker.Longitude) { SRID = Statics.Srid };
-                            _context.Markers.Update(markerDb);
+                            var markerDb = markersDb.FirstOrDefault(x => x.DataId == marker.DataId);
+                            if (markerDb is null)
+                                InsertMarkerToContext(dbContext, marker);
+                            else
+                            {
+                                markerDb.DataId = markerDb.DataId;
+                                markerDb.City = marker.City;
+                                markerDb.Location = new Point(marker.Latitude, marker.Longitude) { SRID = Statics.Srid };
+                                dbContext.Markers.Update(markerDb);
+                            }
                         }
+                        else
+                            InsertMarkerToContext(dbContext, marker);
                     }
-                    else
-                        InsertMarkerToContext(marker);
-                }
-
-                await _context.SaveChangesAsync();
+                    await dbContext.SaveChangesAsync();
             }
         }
-        private void InsertMarkerToContext(Marker marker)
-        {
-            _context.Markers.Add(new Models.Marker
-            {
-                City = marker.City,
-                Name = marker.Name,
-                Location = new Point(marker.Latitude, marker.Longitude) { SRID = Statics.Srid },
-                DataId = marker.DataId
-            });
-        }
     }
+    private void InsertMarkerToContext(ScraperDbContext dbContext, Marker marker)
+    {
+        dbContext.Markers.Add(new Models.Marker
+        {
+            City = marker.City,
+            Name = marker.Name,
+            Location = new Point(marker.Latitude, marker.Longitude) { SRID = Statics.Srid },
+            DataId = marker.DataId
+        });
+    }
+}
 }

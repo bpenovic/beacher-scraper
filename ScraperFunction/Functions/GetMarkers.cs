@@ -30,7 +30,7 @@ namespace ScrapeFunction.Functions
             var markerService = Container.GetRequiredService<IMarkerService>();
             var url =$"{Endpoints.Markers}?{Parameters.Year}=2018&{Parameters.Filter}=&{Parameters.Cycle}=-2&{Parameters.Language}=eng";
 
-            var markers = await markerService.ScrapeMarkersAsync(url);
+            var markers = await markerService.ScrapeAndSaveMarkersAsync(url);
 
             return new OkObjectResult($"{JsonConvert.SerializeObject(markers)}");
         }
