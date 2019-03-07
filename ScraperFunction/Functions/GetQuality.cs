@@ -36,12 +36,12 @@ namespace ScrapeFunction.Functions
             if (Int32.TryParse(req.Query["markerId"], out var markerId))
             {
                 var marker = await markerService.GetMarkerByIdAsync(markerId);
-                quality = await qualityService.ScrapeQualityAsync(url, marker);
+                quality = await qualityService.ScrapeAndSaveQualityAsync(url, marker);
             }
             else
             {
                 var markers = await markerService.GetMarkersAsync();
-                await qualityService.ScrapeQualityAsync(url, markers);
+                quality = await qualityService.ScrapeAndSaveQualityAsync(url, markers);
             }
 
             return new OkObjectResult($"{JsonConvert.SerializeObject(quality)}");

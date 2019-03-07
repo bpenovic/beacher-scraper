@@ -1,7 +1,8 @@
 namespace ScraperLib.DomainModels
 {
-    public class Profile
+    public class Details
     {
+        public int Id { get; set; }
         public string Type { get; set; }
         public string SurfaceType { get; set; }
         public string Vegetation { get; set; }
@@ -12,5 +13,6 @@ namespace ScraperLib.DomainModels
         public string Wind { get; set; }
         public double Length { get; set; }
         public double Width { get; set; }
+        public int MarkerId { get; set; }
     }
 }

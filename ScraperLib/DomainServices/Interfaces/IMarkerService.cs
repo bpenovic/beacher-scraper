@@ -6,7 +6,7 @@ namespace ScraperLib.DomainServices.Interfaces
 {
     public interface IMarkerService
     {
-        Task<IEnumerable<Marker>> ScrapeMarkersAsync(string url);
+        Task<IEnumerable<Marker>> ScrapeAndSaveMarkersAsync(string url);
         Task<IEnumerable<Marker>> GetMarkersAsync();
         Task<Marker> GetMarkerByIdAsync(int id);
     }
