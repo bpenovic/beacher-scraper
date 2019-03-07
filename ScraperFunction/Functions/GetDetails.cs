@@ -40,7 +40,7 @@ namespace ScrapeFunction.Functions
             else
             {
                 var markers = await markerService.GetMarkersAsync();
-                var markersDetails = await detailsService.ScrapeAndSaveDetailsAsync(url, markers.Take(5));
+                var markersDetails = await detailsService.ScrapeAndSaveDetailsAsync(url, markers);
                 return new OkObjectResult($"{JsonConvert.SerializeObject(markersDetails)}");
             }
         }
