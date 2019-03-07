@@ -20,9 +20,9 @@ namespace ScraperLib.DomainServices
             _context = context;
         }
 
-        public async Task<Profile> ScrapeDetailsAsync(string url, Marker marker)
+        public async Task<Details> ScrapeDetailsAsync(string url, Marker marker)
         {
-            var detail = new Profile();
+            var detail = new Details();
             if (marker != null)
             {
                 Console.WriteLine($"\nFetching details for {marker.Id} {marker.Name}... \n");
@@ -51,7 +51,7 @@ namespace ScraperLib.DomainServices
             return detail;
         }
 
-        private void AddAttribute(HtmlNode node, Profile profile)
+        private void AddAttribute(HtmlNode node, Details details)
         {
             if (node != null && !string.IsNullOrEmpty(node.InnerHtml))
             {
@@ -64,31 +64,31 @@ namespace ScraperLib.DomainServices
                     if (!string.IsNullOrEmpty(key) && !string.IsNullOrEmpty(value))
                     {
                         if (key.StartsWith(Statics.Type))
-                            profile.Type = value;
+                            details.Type = value;
 
                         if (key.StartsWith(Statics.AverageTemperature))
-                            profile.AverageTemperature = double.Parse(value);
+                            details.AverageTemperature = double.Parse(value);
 
                         if (key.StartsWith(Statics.Length))
-                            profile.Length = double.Parse(value);
+                            details.Length = double.Parse(value);
 
                         if (key.StartsWith(Statics.Width))
-                            profile.Width = double.Parse(value);
+                            details.Width = double.Parse(value);
 
                         if (key.StartsWith(Statics.MaxSalinity))
-                            profile.MaxSalinity = double.Parse(value);
+                            details.MaxSalinity = double.Parse(value);
 
                         if (key.StartsWith(Statics.MinSalinity))
-                            profile.MinSalinity = double.Parse(value);
+                            details.MinSalinity = double.Parse(value);
 
                         if (key.StartsWith(Statics.SurfaceType))
-                            profile.SurfaceType = value;
+                            details.SurfaceType = value;
 
                         if (key.StartsWith(Statics.Vegetation))
-                            profile.Vegetation = value;
+                            details.Vegetation = value;
 
                         if (key.StartsWith(Statics.Wind))
-                            profile.Wind = value;
+                            details.Wind = value;
                     }
                 }
             }

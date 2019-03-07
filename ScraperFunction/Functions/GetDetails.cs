@@ -16,16 +16,16 @@ using ScraperLib.DomainServices.Interfaces;
 
 namespace ScrapeFunction.Functions
 {
-    public static class GetMarkerDetails
+    public static class GetDetails
     {
         public static IServiceProvider Container = new ContainerBuilder()
             .RegisterModule(new CoreAppModule())
             .Build();
 
-        [FunctionName("GetMarkerDetails")]
+        [FunctionName("GetDetails")]
         public static async Task<IActionResult> Run([HttpTrigger(AuthorizationLevel.Function, "get", "post", Route = null)] HttpRequest req, ILogger log)
         {
-            log.LogInformation("C# HTTP trigger function processed a request.");
+            log.LogInformation("GetDetails function processed a request.");
 
             var markerDetails = new Profile();
             var markerService = Container.GetRequiredService<IMarkerService>();
