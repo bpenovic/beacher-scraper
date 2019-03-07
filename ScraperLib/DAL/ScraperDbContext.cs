@@ -13,6 +13,7 @@ namespace ScraperLib.DAL
         }
         public DbSet<Marker> Markers { get; set; }
         public DbSet<Quality> Qualities { get; set; }
+        public DbSet<Details> Details { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {

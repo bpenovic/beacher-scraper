@@ -5,6 +5,7 @@ using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 using HtmlAgilityPack;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using ScraperLib.DAL;
 using ScraperLib.DomainModels;
@@ -20,6 +21,7 @@ namespace ScraperLib.DomainServices
         {
             _client = new HttpClient();
             _context = context;
+            _context.Database.SetCommandTimeout(50);
         }
 
         public async Task<List<Details>> ScrapeAndSaveDetailsAsync(string url, IEnumerable<Marker> markers)
@@ -29,12 +31,57 @@ namespace ScraperLib.DomainServices
                 foreach (var marker in markers)
                     details.Add(await ScrapeDetailsAsync(url, marker));
 
+            await SaveMarkerDetailsAsync(details);
             return details;
         }
         public async Task<Details> ScrapeAndSaveDetailsAsync(string url, Marker marker)
         {
             var details = await ScrapeDetailsAsync(url, marker);
+            await SaveMarkerDetailAsync(details);
             return details;
+        }
+
+        private async Task SaveMarkerDetailAsync(Details detail)
+        {
+            if (detail != null)
+            {
+                var detailsDb = await _context.Details.ToListAsync();
+                if (detailsDb != null)
+                {
+                    var detailDb = detailsDb.FirstOrDefault(x => x.MarkerId == detail.MarkerId);
+                    if (detailDb is null)
+                        InsertDetailToContext(detail);
+                    else
+                        UpdateDetailToContext(detailDb, detail);
+                }
+                else
+                    InsertDetailToContext(detail);
+
+                await _context.SaveChangesAsync();
+            }
+        }
+
+        private async Task SaveMarkerDetailsAsync(List<Details> details)
+        {
+            if (details != null)
+            {
+                var detailsDb = await _context.Details.ToListAsync();
+                foreach (var detail in details)
+                {
+                    if (detailsDb != null)
+                    {
+                        var detailDb = detailsDb.FirstOrDefault(x => x.MarkerId == detail.MarkerId);
+                        if (detailDb is null)
+                            InsertDetailToContext(detail);
+                        else
+                            UpdateDetailToContext(detailDb, detail);
+                    }
+                    else
+                        InsertDetailToContext(detail);
+                }
+
+                await _context.SaveChangesAsync();
+            }
         }
 
         private async Task<Details> ScrapeDetailsAsync(string url, Marker marker)
@@ -44,7 +91,7 @@ namespace ScraperLib.DomainServices
             {
                 Console.WriteLine($"\nFetching details for {marker.Id} {marker.Name}... \n");
                 Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
-                var result = await _client.GetStringAsync($"{url}&plok={marker.Id}");
+                var result = await _client.GetStringAsync($"{url}&plok={marker.DataId}");
 
                 if (!string.IsNullOrEmpty(result))
                 {
@@ -58,7 +105,10 @@ namespace ScraperLib.DomainServices
                     {
                         var trs = dataTable.Descendants("tr");
                         foreach (var tr in trs)
+                        {
                             AddAttribute(tr, detail);
+                            detail.MarkerId = marker.Id;
+                        }
                     }
                 }
                 else
@@ -67,7 +117,6 @@ namespace ScraperLib.DomainServices
 
             return detail;
         }
-
         private void AddAttribute(HtmlNode node, Details details)
         {
             if (node != null && !string.IsNullOrEmpty(node.InnerHtml))
@@ -82,6 +131,9 @@ namespace ScraperLib.DomainServices
                     {
                         if (key.StartsWith(Statics.Type))
                             details.Type = value;
+
+                        if (key.StartsWith(Statics.Shape))
+                            details.Shape = value;
 
                         if (key.StartsWith(Statics.AverageTemperature))
                             details.AverageTemperature = double.Parse(value);
@@ -109,6 +161,38 @@ namespace ScraperLib.DomainServices
                     }
                 }
             }
+        }
+        private void InsertDetailToContext(Details detail)
+        {
+            _context.Details.Add(new Models.Details
+            {
+                Type = detail.Type,
+                SurfaceType = detail.SurfaceType,
+                Vegetation = detail.Vegetation,
+                Shape = detail.Shape,
+                AverageTemperature = detail.AverageTemperature,
+                MaxSalinity = detail.MaxSalinity,
+                MinSalinity = detail.MinSalinity,
+                Wind = detail.Wind,
+                Width = detail.Width,
+                Length = detail.Length,
+                MarkerId = detail.MarkerId
+            });
+        }
+
+        private void UpdateDetailToContext(Models.Details detailDb, Details detail)
+        {
+            detailDb.Type = detail.Type;
+            detailDb.SurfaceType = detail.SurfaceType;
+            detailDb.Vegetation = detail.Vegetation;
+            detailDb.Shape = detail.Shape;
+            detailDb.AverageTemperature = detail.AverageTemperature;
+            detailDb.MaxSalinity = detail.MaxSalinity;
+            detailDb.MinSalinity = detail.MinSalinity;
+            detailDb.Wind = detail.Wind;
+            detailDb.Width = detail.Width;
+            detailDb.Length = detail.Length;
+            _context.Details.Update(detailDb);
         }
     }
 }

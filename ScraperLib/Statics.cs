@@ -11,6 +11,7 @@ namespace ScraperLib
         public static readonly string Wind = "Prevailing wind";
         public static readonly string Length = "Beach length";
         public static readonly string Width = "Beach width";
+        public static readonly string Shape = "Beach shape";
         public static readonly int Srid = 4326;
     }
 

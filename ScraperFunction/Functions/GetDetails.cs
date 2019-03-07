@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.WebJobs;
@@ -39,7 +40,7 @@ namespace ScrapeFunction.Functions
             else
             {
                 var markers = await markerService.GetMarkersAsync();
-                var markersDetails = await detailsService.ScrapeAndSaveDetailsAsync(url, markers);
+                var markersDetails = await detailsService.ScrapeAndSaveDetailsAsync(url, markers.Take(5));
                 return new OkObjectResult($"{JsonConvert.SerializeObject(markersDetails)}");
             }
         }
