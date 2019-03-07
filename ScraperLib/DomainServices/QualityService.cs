@@ -15,11 +15,11 @@ using ScraperLib.Enums;
 
 namespace ScraperLib.DomainServices
 {
-    public class QualityService : DomainBaseService, IQualityService
+    public class QualityService :  IQualityService
     {
         private readonly HttpClient _client;
         private readonly ScraperDbContext _context;
-        public QualityService(ScraperDbContext context, IOptions<AppSettings> settings) : base(settings)
+        public QualityService(ScraperDbContext context, IOptions<AppSettings> settings)
         {
             _client = new HttpClient();
             _context = context;
@@ -36,11 +36,18 @@ namespace ScraperLib.DomainServices
             await SaveMarkerQualitiesAsync(qualities);
             return qualities;
         }
-
         public async Task<List<Quality>> ScrapeAndSaveQualityAsync(string url, Marker marker)
         {
             var qualities = await ScrapeQualityAsync(url, marker);
             await SaveMarkerQualitiesAsync(qualities);
+            return qualities;
+        }
+        public async Task<IEnumerable<Quality>> GetQualitiesForMarkerAsync(int markerId)
+        {
+            var qualities = new List<Quality>();
+            if (markerId > 0)
+                qualities = await _context.Qualities.Where(x => x.MarkerId == markerId).Select(Quality.Select).ToListAsync();
+
             return qualities;
         }
 
@@ -85,15 +92,6 @@ namespace ScraperLib.DomainServices
             }
             return qualities;
         }
-        public async Task<IEnumerable<Quality>> GetQualitiesForMarkerAsync(int markerId)
-        {
-            var qualities = new List<Quality>();
-            if (markerId > 0)
-                qualities = await _context.Qualities.Where(x => x.MarkerId == markerId).Select(Quality.Select).ToListAsync();
-
-            return qualities;
-        }
-
         private async Task SaveMarkerQualitiesAsync(IEnumerable<Quality> qualities)
         {
             if (qualities != null)

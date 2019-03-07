@@ -6,12 +6,10 @@ using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using ScrapeFunction.Containers;
 using ScrapeFunction.Modules;
 using ScraperLib;
-using ScraperLib.DomainModels;
 using ScraperLib.DomainServices.Interfaces;
 
 namespace ScrapeFunction.Functions
@@ -27,7 +25,6 @@ namespace ScrapeFunction.Functions
         {
             log.LogInformation("GetDetails function processed a request.");
 
-            var markerDetails = new Profile();
             var markerService = Container.GetRequiredService<IMarkerService>();
             var detailsService = Container.GetRequiredService<IDetailsService>();
 
@@ -36,10 +33,15 @@ namespace ScrapeFunction.Functions
             if (Int32.TryParse(req.Query["markerId"], out int markerId))
             {
                 var marker = await markerService.GetMarkerByIdAsync(markerId);
-                markerDetails = await detailsService.ScrapeDetailsAsync(url, marker);
+                var markerDetails = await detailsService.ScrapeAndSaveDetailsAsync(url, marker);
+                return new OkObjectResult($"{JsonConvert.SerializeObject(markerDetails)}");
             }
-
-            return new OkObjectResult($"{JsonConvert.SerializeObject(markerDetails)}");
+            else
+            {
+                var markers = await markerService.GetMarkersAsync();
+                var markersDetails = await detailsService.ScrapeAndSaveDetailsAsync(url, markers);
+                return new OkObjectResult($"{JsonConvert.SerializeObject(markersDetails)}");
+            }
         }
     }
 }

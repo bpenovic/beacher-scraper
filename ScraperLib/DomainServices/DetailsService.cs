@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Text;
@@ -7,10 +8,11 @@ using HtmlAgilityPack;
 using Microsoft.Extensions.Options;
 using ScraperLib.DAL;
 using ScraperLib.DomainModels;
+using ScraperLib.DomainServices.Interfaces;
 
 namespace ScraperLib.DomainServices
 {
-    public class DetailsService : DomainBaseService
+    public class DetailsService : DomainBaseService, IDetailsService
     {
         private readonly HttpClient _client;
         private readonly ScraperDbContext _context;
@@ -20,7 +22,22 @@ namespace ScraperLib.DomainServices
             _context = context;
         }
 
-        public async Task<Details> ScrapeDetailsAsync(string url, Marker marker)
+        public async Task<List<Details>> ScrapeAndSaveDetailsAsync(string url, IEnumerable<Marker> markers)
+        {
+            var details = new List<Details>();
+            if (markers != null)
+                foreach (var marker in markers)
+                    details.Add(await ScrapeDetailsAsync(url, marker));
+
+            return details;
+        }
+        public async Task<Details> ScrapeAndSaveDetailsAsync(string url, Marker marker)
+        {
+            var details = await ScrapeDetailsAsync(url, marker);
+            return details;
+        }
+
+        private async Task<Details> ScrapeDetailsAsync(string url, Marker marker)
         {
             var detail = new Details();
             if (marker != null)

@@ -16,5 +16,6 @@ namespace ScraperLib.Models
         [Required]
         public int DataId { get; set; }
         public virtual ICollection<Quality> Qualities { get; set; }
+        public virtual ICollection<Details> Details { get; set; }
     }
 }
