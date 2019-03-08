@@ -14,9 +14,9 @@ namespace ScraperLib.DomainServices
 
         protected ScraperDbContext GetDbContext(bool tracking)
         {
-            var sarahahV2DbContext = new ScraperDbContext(_settings.ConnectionStrings.DefaultConnection);
-            sarahahV2DbContext.ChangeTracker.QueryTrackingBehavior = tracking ? QueryTrackingBehavior.TrackAll : QueryTrackingBehavior.NoTracking;
-            return sarahahV2DbContext;
+            var scraperDbContext = new ScraperDbContext(_settings.ConnectionStrings.DefaultConnection);
+            scraperDbContext.ChangeTracker.QueryTrackingBehavior = tracking ? QueryTrackingBehavior.TrackAll : QueryTrackingBehavior.NoTracking;
+            return scraperDbContext;
         }
     }
 }

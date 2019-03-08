@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using ScraperLib.Migrations;
 using ScraperLib.Models;
 
 namespace ScraperLib.DAL
@@ -12,8 +13,11 @@ namespace ScraperLib.DAL
         {
         }
         public DbSet<Marker> Markers { get; set; }
+        public DbSet<MarkerForUpdate> MarkersForUpdate { get; set; }
         public DbSet<Quality> Qualities { get; set; }
+        public DbSet<QualityForUpdate> QualitiesForUpdate { get; set; }
         public DbSet<Details> Details { get; set; }
+        public DbSet<DetailsForUpdate> DetailsForUpdate { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {

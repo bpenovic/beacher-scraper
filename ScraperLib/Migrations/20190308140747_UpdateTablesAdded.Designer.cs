@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using NetTopologySuite.Geometries;
 using ScraperLib.DAL;
@@ -10,9 +11,10 @@ using ScraperLib.DAL;
 namespace ScraperLib.Migrations
 {
     [DbContext(typeof(ScraperDbContext))]
-    partial class ScraperDbContextModelSnapshot : ModelSnapshot
+    [Migration("20190308140747_UpdateTablesAdded")]
+    partial class UpdateTablesAdded
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -137,11 +139,9 @@ namespace ScraperLib.Migrations
                     b.Property<string>("Name")
                         .IsRequired();
 
-                    b.Property<Guid>("OperationGuid");
-
                     b.HasKey("Id");
 
-                    b.ToTable("MarkersForUpdate");
+                    b.ToTable("MarkerModelUpdated");
                 });
 
             modelBuilder.Entity("ScraperLib.Models.Quality", b =>

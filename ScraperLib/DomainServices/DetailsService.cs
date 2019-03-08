@@ -8,28 +8,31 @@ using HtmlAgilityPack;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using ScraperLib.DAL;
-using ScraperLib.DomainModels;
 using ScraperLib.DomainServices.Interfaces;
+using ScraperLib.Models;
+using Details = ScraperLib.DomainModels.Details;
+using Marker = ScraperLib.DomainModels.Marker;
 
 namespace ScraperLib.DomainServices
 {
     public class DetailsService : DomainBaseService, IDetailsService
     {
         private readonly HttpClient _client;
-        private readonly ScraperDbContext _context;
         public DetailsService(ScraperDbContext context, IOptions<AppSettings> settings) : base(settings)
         {
             _client = new HttpClient();
-            _context = context;
-            _context.Database.SetCommandTimeout(50);
         }
 
         public async Task<List<Details>> ScrapeAndSaveDetailsAsync(string url, IEnumerable<Marker> markers)
         {
             var details = new List<Details>();
             if (markers != null)
-                foreach (var marker in markers)
-                    details.Add(await ScrapeDetailsAsync(url, marker));
+            {
+                var tasks = markers.Select(marker => ScrapeDetailsAsync(url, marker));
+                await Task.WhenAll(tasks);
+                List<Details> list = tasks.Select(t => t.Result).ToList();
+                details.AddRange(list);
+            }
 
             await SaveMarkerDetailsAsync(details);
             return details;
@@ -45,19 +48,39 @@ namespace ScraperLib.DomainServices
         {
             if (detail != null)
             {
-                var detailsDb = await _context.Details.ToListAsync();
-                if (detailsDb != null)
+                var operationGuid = Guid.NewGuid();
+                using (var dbContext = GetDbContext(false))
                 {
-                    var detailDb = detailsDb.FirstOrDefault(x => x.MarkerId == detail.MarkerId);
-                    if (detailDb is null)
-                        InsertDetailToContext(detail);
+                    var detailsDb = await dbContext.Details.ToListAsync();
+                    if (detailsDb != null)
+                    {
+                        var detailExist = detailsDb.Any(x => x.MarkerId == detail.MarkerId);
+                        if (!detailExist)
+                            InsertDetailToContext(dbContext, detail);
+                        else
+                        {
+                            dbContext.DetailsForUpdate.Add(new DetailsForUpdate()
+                            {
+                                Type = detail.Type,
+                                SurfaceType = detail.SurfaceType,
+                                Vegetation = detail.Vegetation,
+                                Shape = detail.Shape,
+                                AverageTemperature = detail.AverageTemperature,
+                                MaxSalinity = detail.MaxSalinity,
+                                MinSalinity = detail.MinSalinity,
+                                Wind = detail.Wind,
+                                Width = detail.Width,
+                                Length = detail.Length,
+                                OperationGuid = operationGuid
+                            });
+                        }
+                    }
                     else
-                        UpdateDetailToContext(detailDb, detail);
-                }
-                else
-                    InsertDetailToContext(detail);
+                        InsertDetailToContext(dbContext, detail);
 
-                await _context.SaveChangesAsync();
+                    await dbContext.SaveChangesAsync();
+                    await UpdateDetailAsync(dbContext, operationGuid);
+                }
             }
         }
 
@@ -65,22 +88,27 @@ namespace ScraperLib.DomainServices
         {
             if (details != null)
             {
-                var detailsDb = await _context.Details.ToListAsync();
-                foreach (var detail in details)
+                using (var dbContext = GetDbContext(false))
                 {
-                    if (detailsDb != null)
+                    var detailsDb = await dbContext.Details.ToListAsync();
+                    foreach (var detail in details)
                     {
-                        var detailDb = detailsDb.FirstOrDefault(x => x.MarkerId == detail.MarkerId);
-                        if (detailDb is null)
-                            InsertDetailToContext(detail);
+                        if (detailsDb != null)
+                        {
+                            var detailDb = detailsDb.FirstOrDefault(x => x.MarkerId == detail.MarkerId);
+                            if (detailDb is null)
+                                InsertDetailToContext(dbContext, detail);
+                            else
+                            {
+                                UpdateDetailToContext(dbContext, detailDb, detail);
+                            }
+                        }
                         else
-                            UpdateDetailToContext(detailDb, detail);
+                            InsertDetailToContext(dbContext, detail);
                     }
-                    else
-                        InsertDetailToContext(detail);
-                }
 
-                await _context.SaveChangesAsync();
+                    await dbContext.SaveChangesAsync();
+                }
             }
         }
 
@@ -162,9 +190,9 @@ namespace ScraperLib.DomainServices
                 }
             }
         }
-        private void InsertDetailToContext(Details detail)
+        private void InsertDetailToContext(ScraperDbContext dbContext, Details detail)
         {
-            _context.Details.Add(new Models.Details
+            dbContext.Details.Add(new Models.Details
             {
                 Type = detail.Type,
                 SurfaceType = detail.SurfaceType,
@@ -180,7 +208,7 @@ namespace ScraperLib.DomainServices
             });
         }
 
-        private void UpdateDetailToContext(Models.Details detailDb, Details detail)
+        private void UpdateDetailToContext(ScraperDbContext dbContext, Models.Details detailDb, Details detail)
         {
             detailDb.Type = detail.Type;
             detailDb.SurfaceType = detail.SurfaceType;
@@ -192,7 +220,18 @@ namespace ScraperLib.DomainServices
             detailDb.Wind = detail.Wind;
             detailDb.Width = detail.Width;
             detailDb.Length = detail.Length;
-            _context.Details.Update(detailDb);
+            dbContext.Details.Update(detailDb);
+        }
+
+        private async Task UpdateDetailAsync(ScraperDbContext dbContext, Guid operationGuid)
+        {
+            await dbContext.Database.ExecuteSqlCommandAsync($@"
+                        UPDATE D
+                        SET 
+                            Value = tmp.Value
+                        FROM Details D
+                        JOIN DetailsForUpdate tmp on tmp.MarkerId = D.MarkerId and tmp.OperationGuid = {operationGuid}");
+            await dbContext.Database.ExecuteSqlCommandAsync($"Delete from DetailsForUpdate where OperationGuid = {operationGuid}");
         }
     }
 }
