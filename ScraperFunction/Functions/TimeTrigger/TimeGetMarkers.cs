@@ -17,7 +17,7 @@ namespace ScraperFunction.Functions.TimeTrigger
             .Build();
 
         [FunctionName("TimeGetMarkers")]
-        public static async Task Run([TimerTrigger("0 */5 * * * *")]TimerInfo myTimer, ILogger log)
+        public static async Task Run([TimerTrigger("0 0 0 1 * *")]TimerInfo myTimer, ILogger log)
         {
             log.LogInformation($"TimeGetMarkers trigger function executed at: {DateTime.Now}");
             var markerService = Container.GetRequiredService<IMarkerService>();
