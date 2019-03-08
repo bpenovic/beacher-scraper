@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using NetTopologySuite.Geometries;
 using ScraperLib.DAL;
@@ -10,9 +11,10 @@ using ScraperLib.DAL;
 namespace ScraperLib.Migrations
 {
     [DbContext(typeof(ScraperDbContext))]
-    partial class ScraperDbContextModelSnapshot : ModelSnapshot
+    [Migration("20190308140601_AddOperationGuidToQuality")]
+    partial class AddOperationGuidToQuality
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -60,46 +62,6 @@ namespace ScraperLib.Migrations
                     b.ToTable("Details");
                 });
 
-            modelBuilder.Entity("ScraperLib.Models.DetailsForUpdate", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
-
-                    b.Property<double>("AverageTemperature");
-
-                    b.Property<double>("Length");
-
-                    b.Property<int>("MarkerId");
-
-                    b.Property<double>("MaxSalinity");
-
-                    b.Property<double>("MinSalinity");
-
-                    b.Property<Guid>("OperationGuid");
-
-                    b.Property<string>("Shape")
-                        .HasMaxLength(100);
-
-                    b.Property<string>("SurfaceType")
-                        .HasMaxLength(50);
-
-                    b.Property<string>("Type")
-                        .HasMaxLength(50);
-
-                    b.Property<string>("Vegetation")
-                        .HasMaxLength(100);
-
-                    b.Property<double>("Width");
-
-                    b.Property<string>("Wind")
-                        .HasMaxLength(50);
-
-                    b.HasKey("Id");
-
-                    b.ToTable("DetailsForUpdate");
-                });
-
             modelBuilder.Entity("ScraperLib.Models.Marker", b =>
                 {
                     b.Property<int>("Id")
@@ -119,29 +81,6 @@ namespace ScraperLib.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Markers");
-                });
-
-            modelBuilder.Entity("ScraperLib.Models.MarkerForUpdate", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
-
-                    b.Property<string>("City");
-
-                    b.Property<int>("DataId");
-
-                    b.Property<Point>("Location")
-                        .IsRequired();
-
-                    b.Property<string>("Name")
-                        .IsRequired();
-
-                    b.Property<Guid>("OperationGuid");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("MarkersForUpdate");
                 });
 
             modelBuilder.Entity("ScraperLib.Models.Quality", b =>

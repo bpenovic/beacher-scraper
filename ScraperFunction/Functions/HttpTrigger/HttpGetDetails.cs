@@ -13,15 +13,15 @@ using ScrapeFunction.Modules;
 using ScraperLib;
 using ScraperLib.DomainServices.Interfaces;
 
-namespace ScrapeFunction.Functions
+namespace ScrapeFunction.Functions.HttpTrigger
 {
-    public static class GetDetails
+    public static class HttpGetDetails
     {
         public static IServiceProvider Container = new ContainerBuilder()
             .RegisterModule(new CoreAppModule())
             .Build();
 
-        [FunctionName("GetDetails")]
+        [FunctionName("HttpGetDetails")]
         public static async Task<IActionResult> Run([HttpTrigger(AuthorizationLevel.Function, "get", "post", Route = null)] HttpRequest req, ILogger log)
         {
             log.LogInformation("GetDetails function processed a request.");

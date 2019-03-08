@@ -15,23 +15,25 @@ using ScraperLib.Enums;
 
 namespace ScraperLib.DomainServices
 {
-    public class QualityService :  IQualityService
+    public class QualityService : DomainBaseService, IQualityService
     {
         private readonly HttpClient _client;
-        private readonly ScraperDbContext _context;
-        public QualityService(ScraperDbContext context, IOptions<AppSettings> settings)
+        public QualityService(ScraperDbContext context, IOptions<AppSettings> settings) : base(settings)
         {
             _client = new HttpClient();
-            _context = context;
-            _context.Database.SetCommandTimeout(50);
         }
 
         public async Task<List<Quality>> ScrapeAndSaveQualityAsync(string url, IEnumerable<Marker> markers)
         {
             var qualities = new List<Quality>();
+
             if (markers != null)
-                foreach (var marker in markers)
-                    qualities.AddRange(await ScrapeQualityAsync(url, marker));
+            {
+                var tasks = markers.Select(marker => ScrapeQualityAsync(url, marker));
+                await Task.WhenAll(tasks);
+                List<Quality> list = tasks.SelectMany(t => t.Result).ToList();
+                qualities.AddRange(list);
+            }
 
             await SaveMarkerQualitiesAsync(qualities);
             return qualities;
@@ -45,10 +47,14 @@ namespace ScraperLib.DomainServices
         public async Task<IEnumerable<Quality>> GetQualitiesForMarkerAsync(int markerId)
         {
             var qualities = new List<Quality>();
-            if (markerId > 0)
-                qualities = await _context.Qualities.Where(x => x.MarkerId == markerId).Select(Quality.Select).ToListAsync();
+            using (var dbContext = GetDbContext(false))
+            {
+                if (markerId > 0)
+                    qualities = await dbContext.Qualities.Where(x => x.MarkerId == markerId).Select(Quality.Select)
+                        .ToListAsync();
 
-            return qualities;
+                return qualities;
+            }
         }
 
         private async Task<List<Quality>> ScrapeQualityAsync(string url, Marker marker)
@@ -96,26 +102,35 @@ namespace ScraperLib.DomainServices
         {
             if (qualities != null)
             {
-                var qualitiesDb = await _context.Qualities.ToListAsync();
-                foreach (var quality in qualities)
+                var operationGuid = Guid.NewGuid();
+                using (var dbContext = GetDbContext(false))
                 {
-                    if (qualitiesDb != null)
+                    var qualitiesDb = await dbContext.Qualities.ToListAsync();
+                    foreach (var quality in qualities)
                     {
-                        var qualityDb = qualitiesDb.FirstOrDefault(x => x.Date == quality.Date && x.MarkerId == quality.MarkerId);
-                        if (qualityDb is null)
-                            InsertQualityToContext(quality);
-                        else
+                        if (qualitiesDb != null)
                         {
-                            qualityDb.Date = quality.Date;
-                            qualityDb.Value = quality.Value;
-                            _context.Qualities.Update(qualityDb);
+                            var qualityExists = qualitiesDb.Any(x =>x.Date == quality.Date && x.MarkerId == quality.MarkerId);
+                            if (!qualityExists)
+                                InsertQualityToContext(dbContext, quality);
+                            else
+                            {
+                                dbContext.QualitiesForUpdate.Add(new Models.QualityForUpdate()
+                                {
+                                    Date = quality.Date,
+                                    MarkerId = quality.MarkerId,
+                                    Value = quality.Value,
+                                    OperationGuid = operationGuid
+                                });
+                            }
                         }
+                        else
+                            InsertQualityToContext(dbContext, quality);
                     }
-                    else
-                        InsertQualityToContext(quality);
-                }
 
-                await _context.SaveChangesAsync();
+                    await dbContext.SaveChangesAsync();
+                    await UpdateQualityAsync(dbContext, operationGuid);
+                }
             }
         }
         private string GetQualityMeasurementDate(HtmlNode node)
@@ -145,14 +160,25 @@ namespace ScraperLib.DomainServices
 
             return QualityEnum.Unknown;
         }
-        private void InsertQualityToContext(Quality quality)
+        private void InsertQualityToContext(ScraperDbContext dbContext, Quality quality)
         {
-            _context.Qualities.Add(new Models.Quality
+            dbContext.Qualities.Add(new Models.Quality
             {
                 Date = quality.Date,
                 MarkerId = quality.MarkerId,
                 Value = quality.Value
             });
+        }
+
+        private async Task UpdateQualityAsync(ScraperDbContext dbContext, Guid operationGuid)
+        {
+            await dbContext.Database.ExecuteSqlCommandAsync($@"
+                        UPDATE Q 
+                        SET 
+                            Value = tmp.Value
+                        FROM Qualities Q
+                        JOIN QualitiesForUpdate tmp on tmp.MarkerId = Q.MarkerId and tmp.Date = Q.Date and tmp.OperationGuid = {operationGuid}");
+            await dbContext.Database.ExecuteSqlCommandAsync($"Delete from QualitiesForUpdate where OperationGuid = {operationGuid}");
         }
     }
 }

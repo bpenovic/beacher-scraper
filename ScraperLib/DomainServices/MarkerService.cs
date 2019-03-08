@@ -25,7 +25,7 @@ namespace ScraperLib.DomainServices
         {
             _client = new HttpClient();
             _context = context;
-            _context.Database.SetCommandTimeout(35);
+            _context.Database.SetCommandTimeout(50);
         }
 
         public async Task<IEnumerable<Marker>> ScrapeAndSaveMarkersAsync(string url)
@@ -91,9 +91,9 @@ namespace ScraperLib.DomainServices
 
         private async Task SaveMarkersAsync(IEnumerable<Marker> markers)
         {
-            var markesToUpdate = new List<Models.Marker>();
             if (markers != null)
             {
+                var operationGuid = Guid.NewGuid();
                 using (var dbContext = GetDbContext(true))
                 {
                     var markersDb = await dbContext.Markers.ToListAsync();
@@ -101,33 +101,52 @@ namespace ScraperLib.DomainServices
                     {
                         if (markersDb != null)
                         {
-                            var markerDb = markersDb.FirstOrDefault(x => x.DataId == marker.DataId);
-                            if (markerDb is null)
+                            var markerExist = markersDb.Any(x => x.DataId == marker.DataId);
+                            if (!markerExist)
                                 InsertMarkerToContext(dbContext, marker);
                             else
                             {
-                                markerDb.DataId = markerDb.DataId;
-                                markerDb.City = marker.City;
-                                markerDb.Location = new Point(marker.Latitude, marker.Longitude) { SRID = Statics.Srid };
-                                dbContext.Markers.Update(markerDb);
+                                dbContext.MarkersForUpdate.Add(new Models.MarkerForUpdate
+                                {
+                                    Name = marker.Name,
+                                    DataId = marker.DataId,
+                                    City = marker.City,
+                                    Location = new Point(marker.Latitude, marker.Longitude) { SRID = Statics.Srid },
+                                    OperationGuid = operationGuid
+                                });
                             }
                         }
                         else
                             InsertMarkerToContext(dbContext, marker);
+                        await dbContext.SaveChangesAsync();
+                        await UpdateMarkerAsync(dbContext, operationGuid);
                     }
-                    await dbContext.SaveChangesAsync();
+                }
             }
         }
-    }
-    private void InsertMarkerToContext(ScraperDbContext dbContext, Marker marker)
-    {
-        dbContext.Markers.Add(new Models.Marker
+        private void InsertMarkerToContext(ScraperDbContext dbContext, Marker marker)
         {
-            City = marker.City,
-            Name = marker.Name,
-            Location = new Point(marker.Latitude, marker.Longitude) { SRID = Statics.Srid },
-            DataId = marker.DataId
-        });
+            dbContext.Markers.Add(new Models.Marker
+            {
+                City = marker.City,
+                Name = marker.Name,
+                Location = new Point(marker.Latitude, marker.Longitude) { SRID = Statics.Srid },
+                DataId = marker.DataId
+            });
+        }
+
+        private async Task UpdateMarkerAsync(ScraperDbContext dbContext, Guid operationGuid)
+        {
+            await dbContext.Database.ExecuteSqlCommandAsync($@"
+                        UPDATE M
+                        SET 
+                            City = tmp.City,
+                            Name = tmp.Name,
+                            Location = tmp.Location,
+                            DataId = tmp.DataId
+                        FROM Markers M
+                        JOIN MarkersForUpdate tmp on tmp.DataId = M.DataId and tmp.OperationGuid = {operationGuid}");
+            await dbContext.Database.ExecuteSqlCommandAsync($"Delete from MarkersForUpdate where OperationGuid = {operationGuid}");
+        }
     }
-}
 }
