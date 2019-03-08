@@ -6,23 +6,22 @@ using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using ScrapeFunction.Containers;
 using ScrapeFunction.Modules;
 using ScraperLib;
 using ScraperLib.DomainServices.Interfaces;
 
-namespace ScrapeFunction.Functions
+namespace ScrapeFunction.Functions.HttpTrigger
 {
 
-    public static class GetMarkers
+    public static class HttpGetMarkers
     {
         public static IServiceProvider Container = new ContainerBuilder()
             .RegisterModule(new CoreAppModule())
             .Build();
 
-        [FunctionName("GetMarkers")]
+        [FunctionName("HttpGetMarkers")]
         public static async Task<IActionResult> Run([HttpTrigger(AuthorizationLevel.Function, "get", "post", Route = null)] HttpRequest req, ILogger log)
         {
             log.LogInformation("GetMarkers function processed a request.");

@@ -14,20 +14,20 @@ using ScraperLib;
 using ScraperLib.DomainModels;
 using ScraperLib.DomainServices.Interfaces;
 
-namespace ScrapeFunction.Functions
+namespace ScrapeFunction.Functions.HttpTrigger
 {
-    public static class GetQuality
+    public static class HttpGetQuality
     {
         public static IServiceProvider Container = new ContainerBuilder()
             .RegisterModule(new CoreAppModule())
             .Build();
 
-        [FunctionName("GetQuality")]
+        [FunctionName("HttpGetQuality")]
         public static async Task<IActionResult> Run([HttpTrigger(AuthorizationLevel.Function, "get", "post", Route = null)] HttpRequest req, ILogger log)
         {
             log.LogInformation("GetQuality function processed a request.");
 
-            var quality = new List<Quality>();
+            List<Quality> quality;
             var qualityService = Container.GetRequiredService<IQualityService>();
             var markerService = Container.GetRequiredService<IMarkerService>();
 
