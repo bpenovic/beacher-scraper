@@ -25,7 +25,7 @@ namespace ScraperLib.DomainServices
         {
             _client = new HttpClient();
             _context = context;
-            _context.Database.SetCommandTimeout(35);
+            _context.Database.SetCommandTimeout(50);
         }
 
         public async Task<IEnumerable<Marker>> ScrapeAndSaveMarkersAsync(string url)

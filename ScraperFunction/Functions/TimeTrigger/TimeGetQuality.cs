@@ -1,10 +1,8 @@
 using System;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
 using ScrapeFunction.Containers;
 using ScrapeFunction.Modules;
 using ScraperLib;
