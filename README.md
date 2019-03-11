@@ -4,7 +4,7 @@ Web scraper is created as Azure Function, which collect data from web site (scra
 ## Azure functions  
 For testing purposes, functions are implemented as HttpTriggered functions but for production will be used as Time triggered functions (every month).  
 
-### (Limitations enforced by the Azure Web Apps platform)[https://github.com/projectkudu/kudu/wiki/Azure-Web-App-sandbox]
+[Limitations enforced by the Azure Web Apps platform](https://github.com/projectkudu/kudu/wiki/Azure-Web-App-sandbox)
 Limit name	Description	Free/Shared/Consumption Limit	Basic+ Limit
 Threads	Number of threads	512	Unlimited (VM limit still applies)
 Processes	Number of processes	32	Unlimited (VM limit still applies)
