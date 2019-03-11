@@ -4,7 +4,14 @@ Web scraper is created as Azure Function, which collect data from web site (scra
 ## Azure functions  
 For testing purposes, functions are implemented as HttpTriggered functions but for production will be used as Time triggered functions (every month).  
 
-### Database  
+### (Limitations enforced by the Azure Web Apps platform)[https://github.com/projectkudu/kudu/wiki/Azure-Web-App-sandbox]
+Limit name	Description	Free/Shared/Consumption Limit	Basic+ Limit
+Threads	Number of threads	512	Unlimited (VM limit still applies)
+Processes	Number of processes	32	Unlimited (VM limit still applies)
+Connections	Number of bound sockets outstanding	300	Unlimited (VM limit still applies)
+Named Pipes	Number of named pipes	128	128
+Listen Sockets	Number of listen sockets	256	256
+## Database  
 Microsoft SQL Database is used for database storage with ORM (objet-orijented mapping) principle (Entity Framework, Code - first).  
 
 ## ScraperFunction
