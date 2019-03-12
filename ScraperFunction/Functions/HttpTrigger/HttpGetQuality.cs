@@ -23,7 +23,9 @@ namespace ScrapeFunction.Functions.HttpTrigger
             .Build();
 
         [FunctionName("HttpGetQuality")]
-        public static async Task<IActionResult> Run([HttpTrigger(AuthorizationLevel.Function, "get", "post", Route = null)] HttpRequest req, ILogger log)
+        public static async Task<IActionResult> Run(
+            [HttpTrigger(AuthorizationLevel.Function, "get", "post", Route = null)]
+            HttpRequest req, ILogger log)
         {
             log.LogInformation("GetQuality function processed a request.");
 
@@ -40,7 +42,16 @@ namespace ScrapeFunction.Functions.HttpTrigger
             }
             else
             {
-                var markers = await markerService.GetMarkersAsync();
+                int? skip = null;
+                int? take = null;
+                if (Int32.TryParse(req.Query["skip"], out int skipParam))
+                {
+                    skip = skipParam;
+                    if (Int32.TryParse(req.Query["take"], out int takeParam))
+                        take = takeParam;
+                }
+
+                var markers = await markerService.GetMarkersAsync(skip, take);
                 quality = await qualityService.ScrapeAndSaveQualityAsync(url, markers);
             }
 

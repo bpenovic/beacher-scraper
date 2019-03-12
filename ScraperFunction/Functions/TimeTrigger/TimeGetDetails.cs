@@ -16,8 +16,9 @@ namespace ScraperFunction.Functions.TimeTrigger
             .RegisterModule(new CoreAppModule())
             .Build();
 
+        //At 02:00 in every month.
         [FunctionName("TimeGetDetails")]
-        public static async Task Run([TimerTrigger("0 0 0 1 * *")]TimerInfo myTimer, ILogger log)
+        public static async Task Run([TimerTrigger("0 2 * */1 *")]TimerInfo myTimer, ILogger log)
         {
             log.LogInformation($"TimeGetDetails trigger function executed at: {DateTime.Now}");
 
@@ -25,6 +26,7 @@ namespace ScraperFunction.Functions.TimeTrigger
             var detailsService = Container.GetRequiredService<IDetailsService>();
 
             var url = $"{Endpoints.Details}?{Parameters.Season}=2018&{Parameters.Language}=eng";
+
             var markers = await markerService.GetMarkersAsync();
             await detailsService.ScrapeAndSaveDetailsAsync(url, markers);
         }

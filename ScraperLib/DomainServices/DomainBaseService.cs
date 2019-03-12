@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using System.Net.Http;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using ScraperLib.DAL;
 
@@ -7,9 +8,11 @@ namespace ScraperLib.DomainServices
     public abstract class DomainBaseService
     {
         private readonly AppSettings _settings;
-        protected DomainBaseService(IOptions<AppSettings> settings)
+        protected static HttpClient HttpClient { set; get; }
+        protected DomainBaseService(IOptions<AppSettings> settings, HttpClient client)
         {
             _settings = settings.Value;
+            HttpClient = client;
         }
 
         protected ScraperDbContext GetDbContext(bool tracking)

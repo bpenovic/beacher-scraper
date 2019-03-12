@@ -1,5 +1,4 @@
 using System;
-using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.WebJobs;
@@ -37,12 +36,19 @@ namespace ScrapeFunction.Functions.HttpTrigger
                 var markerDetails = await detailsService.ScrapeAndSaveDetailsAsync(url, marker);
                 return new OkObjectResult($"{JsonConvert.SerializeObject(markerDetails)}");
             }
-            else
+
+            int? skip = null;
+            int? take = null;
+            if (Int32.TryParse(req.Query["skip"], out int skipParam))
             {
-                var markers = await markerService.GetMarkersAsync();
-                var markersDetails = await detailsService.ScrapeAndSaveDetailsAsync(url, markers);
-                return new OkObjectResult($"{JsonConvert.SerializeObject(markersDetails)}");
+                skip = skipParam;
+                if (Int32.TryParse(req.Query["take"], out int takeParam))
+                    take = takeParam;
             }
+
+            var markers = await markerService.GetMarkersAsync(skip, take);
+            var markersDetails = await detailsService.ScrapeAndSaveDetailsAsync(url, markers);
+            return new OkObjectResult($"{JsonConvert.SerializeObject(markersDetails)}");
         }
     }
 }
