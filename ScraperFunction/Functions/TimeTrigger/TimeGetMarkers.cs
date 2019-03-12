@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 using ScrapeFunction.Containers;
 using ScrapeFunction.Modules;
 using ScraperLib;
@@ -24,7 +25,8 @@ namespace ScraperFunction.Functions.TimeTrigger
             var markerService = Container.GetRequiredService<IMarkerService>();
             var url = $"{Endpoints.Markers}?{Parameters.Year}=2018&{Parameters.Filter}=&{Parameters.Cycle}=-2&{Parameters.Language}=eng";
 
-            await markerService.ScrapeAndSaveMarkersAsync(url);
+            var result = await markerService.ScrapeAndSaveMarkersAsync(url);
+            log.LogInformation($"{JsonConvert.SerializeObject(result)}");
         }
     }
 }
