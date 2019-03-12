@@ -38,7 +38,9 @@ namespace ScrapeFunction.Modules
                     x.UseNetTopologySuite();
                 });
             }, ServiceLifetime.Transient);
-            services.AddSingleton<HttpClient>();
+
+            var httpClient = new HttpClient();
+            services.AddSingleton<HttpClient>(httpClient);
             services.AddSingleton<IMarkerService, MarkerService>();
             services.AddSingleton<IQualityService, QualityService>();
             services.AddSingleton<IDetailsService, DetailsService>();

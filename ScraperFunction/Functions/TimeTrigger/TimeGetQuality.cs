@@ -12,14 +12,19 @@ namespace ScraperFunction.Functions.TimeTrigger
 {
     public static class TimeGetQuality
     {
+        private static int _skip = 0;
+        private static int _take = 200;
         public static IServiceProvider Container = new ContainerBuilder()
             .RegisterModule(new CoreAppModule())
             .Build();
 
+        //At 00:00 on every 7th day-of-week.
         [FunctionName("TimeGetQuality")]
-        public static async Task Run([TimerTrigger("0 0 0 * * 0")]TimerInfo myTimer, ILogger log)
+        public static async Task Run([TimerTrigger("0 0 * * */7")]TimerInfo myTimer, ILogger log)
         {
-            log.LogInformation($"TimeGetQuality trigger function executed at: {DateTime.Now}");
+            log.LogInformation($"TimeGetQuality trigger function executed at: {DateTime.Now}. Function will skip {_skip} and take {_take} arguments.");
+            _skip = _skip + _take;
+
             var qualityService = Container.GetRequiredService<IQualityService>();
             var markerService = Container.GetRequiredService<IMarkerService>();
 

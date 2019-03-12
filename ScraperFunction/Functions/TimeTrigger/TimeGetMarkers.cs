@@ -16,8 +16,9 @@ namespace ScraperFunction.Functions.TimeTrigger
             .RegisterModule(new CoreAppModule())
             .Build();
 
+        //At 00:00 in every month.
         [FunctionName("TimeGetMarkers")]
-        public static async Task Run([TimerTrigger("0 0 0 1 * *")]TimerInfo myTimer, ILogger log)
+        public static async Task Run([TimerTrigger("0 0 * */1 *")]TimerInfo myTimer, ILogger log)
         {
             log.LogInformation($"TimeGetMarkers trigger function executed at: {DateTime.Now}");
             var markerService = Container.GetRequiredService<IMarkerService>();

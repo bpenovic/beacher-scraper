@@ -13,6 +13,7 @@ namespace ScraperLib
         public static readonly string Width = "Beach width";
         public static readonly string Shape = "Beach shape";
         public static readonly int Srid = 4326;
+        public static readonly int QualitySyncWeeks = 2;
     }
 
     public class Parameters

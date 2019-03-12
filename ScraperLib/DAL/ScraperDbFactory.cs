@@ -31,7 +31,7 @@ namespace ScraperLib.DAL
         {
             var optionsBuilder = new DbContextOptionsBuilder<ScraperDbContext>();
             optionsBuilder.UseSqlServer(connectionString, x => x.UseNetTopologySuite());
-            //optionsBuilder.UseLoggerFactory(new LoggerFactory(new[] { new ConsoleLoggerProvider((_, __) => true, true) })); //Log DBContext
+            optionsBuilder.UseLoggerFactory(new LoggerFactory(new[] { new ConsoleLoggerProvider((_, __) => true, true) })); //Log DBContext
             return optionsBuilder;
         }
     }

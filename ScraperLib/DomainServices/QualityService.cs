@@ -17,10 +17,8 @@ namespace ScraperLib.DomainServices
 {
     public class QualityService : DomainBaseService, IQualityService
     {
-        private readonly HttpClient _client;
-        public QualityService(ScraperDbContext context, IOptions<AppSettings> settings) : base(settings)
+        public QualityService(ScraperDbContext context, HttpClient client, IOptions<AppSettings> settings) : base(settings, client)
         {
-            _client = new HttpClient();
         }
 
         public async Task<List<Quality>> ScrapeAndSaveQualityAsync(string url, IEnumerable<Marker> markers)
@@ -29,10 +27,14 @@ namespace ScraperLib.DomainServices
 
             if (markers != null)
             {
-                var tasks = markers.Select(marker => ScrapeQualityAsync(url, marker));
-                await Task.WhenAll(tasks);
-                List<Quality> list = tasks.SelectMany(t => t.Result).ToList();
-                qualities.AddRange(list);
+                //var tasks = markers.Select(marker => ScrapeQualityAsync(url, marker));
+                //await Task.WhenAll(tasks);
+                //qualities = tasks.SelectMany(t => t.Result).ToList();
+                foreach (var marker in markers)
+                {
+                    var result = await ScrapeQualityAsync(url, marker);
+                    qualities.AddRange(result);
+                }
             }
 
             await SaveMarkerQualitiesAsync(qualities);
@@ -56,45 +58,44 @@ namespace ScraperLib.DomainServices
                 return qualities;
             }
         }
-
         private async Task<List<Quality>> ScrapeQualityAsync(string url, Marker marker)
         {
             var qualities = new List<Quality>();
             if (marker != null)
             {
-                Console.WriteLine($"\nFetching quality for {marker.Id} {marker.Name}... \n");
                 Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
-                var result = await _client.GetStringAsync($"{url}&p_lok_id={marker.DataId}");
-
-                if (!string.IsNullOrEmpty(result))
+                try
                 {
-                    var doc = new HtmlDocument();
-                    doc.LoadHtml(result);
-                    var tables = doc.DocumentNode.Descendants("table");
-
-                    if (tables != null)
+                    var result = await HttpClient.GetStringAsync($"{url}&p_lok_id={marker.DataId}");
+                    if (!string.IsNullOrEmpty(result))
                     {
-                        foreach (var table in tables)
-                        {
-                            var date = GetQualityMeasurementDate(table.Descendants("td").LastOrDefault());
-                            if (DateTime.TryParseExact(date, "dd.MM.yyyy hh:mm", CultureInfo.CurrentCulture, DateTimeStyles.None, out var parsedDate))
+                        var doc = new HtmlDocument();
+                        doc.LoadHtml(result);
+                        var tables = doc.DocumentNode.Descendants("table");
+
+                        if (tables != null)
+                            foreach (var table in tables)
                             {
-                                var mark = (int)GetQualityMark(table.Descendants("a").FirstOrDefault());
-                                var quality = new Quality
+                                var date = GetQualityMeasurementDate(table.Descendants("td").LastOrDefault());
+                                if (DateTime.TryParseExact(date, "dd.MM.yyyy hh:mm", CultureInfo.CurrentCulture,
+                                    DateTimeStyles.None, out var parsedDate))
                                 {
-                                    Date = parsedDate,
-                                    Value = mark,
-                                    MarkerId = marker.Id
-                                };
-                                qualities.Add(quality);
+                                    var mark = (int)GetQualityMark(table.Descendants("a").FirstOrDefault());
+                                    var quality = new Quality
+                                    {
+                                        Date = parsedDate,
+                                        Value = mark,
+                                        MarkerId = marker.Id
+                                    };
+                                    qualities.Add(quality);
+                                }
                             }
-                        }
                     }
-                    else
-                        Console.WriteLine("Td doesn't exist");
                 }
-                else
-                    Console.WriteLine("Result is empty");
+                catch
+                {
+                    //igonored
+                }
             }
             return qualities;
         }
@@ -108,9 +109,9 @@ namespace ScraperLib.DomainServices
                     var qualitiesDb = await dbContext.Qualities.ToListAsync();
                     foreach (var quality in qualities)
                     {
-                        if (qualitiesDb != null)
+                        if (qualitiesDb != null && qualitiesDb.Count > 0)
                         {
-                            var qualityExists = qualitiesDb.Any(x =>x.Date == quality.Date && x.MarkerId == quality.MarkerId);
+                            var qualityExists = qualitiesDb.Any(x => x.Date == quality.Date && x.MarkerId == quality.MarkerId);
                             if (!qualityExists)
                                 InsertQualityToContext(dbContext, quality);
                             else
@@ -169,7 +170,6 @@ namespace ScraperLib.DomainServices
                 Value = quality.Value
             });
         }
-
         private async Task UpdateQualityAsync(ScraperDbContext dbContext, Guid operationGuid)
         {
             await dbContext.Database.ExecuteSqlCommandAsync($@"

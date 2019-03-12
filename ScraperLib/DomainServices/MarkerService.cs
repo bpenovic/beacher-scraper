@@ -19,11 +19,9 @@ namespace ScraperLib.DomainServices
 {
     public class MarkerService : DomainBaseService, IMarkerService
     {
-        private readonly HttpClient _client;
         private readonly ScraperDbContext _context;
-        public MarkerService(ScraperDbContext context, IOptions<AppSettings> settings) : base(settings)
+        public MarkerService(ScraperDbContext context, HttpClient client, IOptions<AppSettings> settings) : base(settings, client)
         {
-            _client = new HttpClient();
             _context = context;
             _context.Database.SetCommandTimeout(50);
         }
@@ -34,53 +32,20 @@ namespace ScraperLib.DomainServices
             return markers;
         }
 
-        private async Task<IEnumerable<Marker>> ScrapeMarkersAsync(string url)
-        {
-            Console.WriteLine("\nFetching markers... \n");
-            var markerList = new List<Marker>();
-            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
-            var result = await _client.GetStringAsync(url);
-
-            if (!string.IsNullOrEmpty(result))
-            {
-                XDocument doc = XDocument.Parse(result);
-                var markers = doc.Descendants("marker").ToList();
-
-                if (markers.Count > 0)
-                {
-                    foreach (var xMarker in markers)
-                    {
-                        var reader = new StringReader(xMarker.ToString());
-                        XmlSerializer xmlSerializer = new XmlSerializer(typeof(MarkerParseModel));
-                        var marker = (MarkerParseModel)xmlSerializer.Deserialize(reader);
-
-                        markerList.Add(new Marker
-                        {
-                            Name = marker.Name,
-                            City = marker.City,
-                            DataId = marker.Id,
-                            Latitude = marker.Latitude,
-                            Longitude = marker.Longitude
-                        });
-                    }
-
-                    await SaveMarkersAsync(markerList);
-                }
-                else
-                    Console.WriteLine("Marker doesn't exist");
-            }
-            else
-                Console.WriteLine("Result is empty");
-
-            return markerList;
-        }
-        public async Task<IEnumerable<Marker>> GetMarkersAsync()
+        public async Task<IEnumerable<Marker>> GetMarkersAsync(int? skip = null, int? take = null)
         {
             using (var dbContext = GetDbContext(true))
             {
-                return await dbContext.Markers.Select(Marker.Select).ToListAsync();
+                var query = dbContext.Markers.AsQueryable();
+                if (skip != null)
+                    query = query.Skip(skip.Value);
+                if (take != null)
+                    query = query.Take(take.Value);
+
+                return await query.Select(Marker.Select).ToListAsync();
             }
         }
+
         public async Task<Marker> GetMarkerByIdAsync(int id)
         {
             using (var dbContext = GetDbContext(true))
@@ -89,6 +54,47 @@ namespace ScraperLib.DomainServices
             }
         }
 
+        private async Task<IEnumerable<Marker>> ScrapeMarkersAsync(string url)
+        {
+            var markerList = new List<Marker>();
+            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+            try
+            {
+                var result = await HttpClient.GetStringAsync(url);
+
+                if (!string.IsNullOrEmpty(result))
+                {
+                    XDocument doc = XDocument.Parse(result);
+                    var markers = doc.Descendants("marker").ToList();
+
+                    if (markers.Count > 0)
+                    {
+                        foreach (var xMarker in markers)
+                        {
+                            var reader = new StringReader(xMarker.ToString());
+                            XmlSerializer xmlSerializer = new XmlSerializer(typeof(MarkerParseModel));
+                            var marker = (MarkerParseModel)xmlSerializer.Deserialize(reader);
+
+                            markerList.Add(new Marker
+                            {
+                                Name = marker.Name,
+                                City = marker.City,
+                                DataId = marker.Id,
+                                Latitude = marker.Latitude,
+                                Longitude = marker.Longitude
+                            });
+                        }
+                        await SaveMarkersAsync(markerList);
+                    }
+                }
+            }
+            catch
+            {
+                //ignored
+            }
+
+            return markerList;
+        }
         private async Task SaveMarkersAsync(IEnumerable<Marker> markers)
         {
             if (markers != null)
@@ -134,7 +140,6 @@ namespace ScraperLib.DomainServices
                 DataId = marker.DataId
             });
         }
-
         private async Task UpdateMarkerAsync(ScraperDbContext dbContext, Guid operationGuid)
         {
             await dbContext.Database.ExecuteSqlCommandAsync($@"
