@@ -15,7 +15,7 @@ For testing purposes, functions are implemented as HttpTriggered functions but f
 | Listen Sockets	(Number of listen sockets) | 256 | 256 |
 
 ## Database  
-Microsoft SQL Database is used for database storage with ORM (objet-orijented mapping) principle (Entity Framework, Code - first).  
+Microsoft SQL Database is used for database storage with ORM (objet-orijented mapping) principle (Entity Framework, Code - first). In some cases we use raw SQL because we have to update more then 1000 rows in database. For optimization of connections and queries we make update with `Temporary tables`.  
 
 ## ScraperFunction
 ScraperFunction is main project which contains:
